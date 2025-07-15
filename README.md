@@ -8,6 +8,12 @@ This repository documents discovered API endpoints from an Eaton xStorage Home s
 
 ---
 
+## Notes
+- **Firmware Version**: I am running firmware version `00.01.0017-0-g72006700`.
+- **HTTPS Access**: To avoid certificate errors, I accessed the HTTPS interface via an HTTPS proxy server using NGINX.
+
+---
+
 ## Summary Table
 
 | Endpoint                          | Method | Requires Technician Account | Description                       |
