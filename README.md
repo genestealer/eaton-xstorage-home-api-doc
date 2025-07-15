@@ -178,12 +178,30 @@ This repository documents discovered API endpoints from an Eaton xStorage Home s
 #### `POST /api/auth/signin`
 - **Description**: Authenticates a user and retrieves a token.
 - **Request**:
-  ```json
-  { "username": "admin", "pwd": "password", "userType": "tech" }
-  ```
+  - **Technician**:
+    ```json
+    {
+      "username": "admin",
+      "pwd": "jlwgK41G",
+      "inverterSn": "REDACTED",
+      "email": "anything@anything.com",
+      "userType": "tech"
+    }
+    ```
+    - **Note**: When signing in with the Technician account, the email address can be anything.
+  - **Customer**:
+    ```json
+    {
+      "username": "user",
+      "pwd": "REDACTED",
+      "userType": "customer"
+    }
+    ```
 - **Response**:
   ```json
-  { "": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+  {
+    "": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
   ```
 
 ---
