@@ -1,9 +1,8 @@
-# eaton-xstorage-home-api
-Eaton xStorage Home API Document (Unofficial)
+# xStorage Home REST API Documentation
 
-# xStorage Home API Documentation
+Eaton xStorage Home locally hosted REST HTTPS API Document (Unofficial)
 
-This repository documents discovered API endpoints from an Eaton xStorage Home system. The endpoints were reverse-engineered using Chrome network monitoring and verified via Postman.
+This repository documents discovered API endpoints from an Eaton xStorage Home system, connected to your local network. The endpoints were reverse-engineered using Chrome network monitoring and verified via Postman.
 
 > ⚠️ This project is **not affiliated with or endorsed by Eaton**. Use at your own risk.
 
