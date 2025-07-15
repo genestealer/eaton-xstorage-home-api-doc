@@ -82,7 +82,7 @@ This repository documents discovered API endpoints from an Eaton xStorage Home s
   {
     "name": "REDACTED",
     "country": { "name": "United Kingdom" },
-    "city": { "name": "Evesham" },
+    "city": { "name": "London" },
     "firmwareVersion": "00.01.0017-0-g72006700",
     "bmsCapacity": 4.2,
     "dns": "8.8.8.8"
