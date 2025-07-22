@@ -402,53 +402,54 @@ This repository documents discovered API endpoints from an Eaton xStorage Home s
 
 #### `POST /api/device/command`
 
-- **Commands**:
   - **SET_CHARGE**: Sets the device to charge mode.
 
     ```json
-    { "command": "SET_CHARGE", "parameters": { "power": 10, "soc": 90, "action": "ACTION_CHARGE" } }
+    { "command": "SET_CHARGE", "duration": 2, "parameters": { "power": 10, "soc": 90, "action": "ACTION_CHARGE" } }
     ```
 
+    - **Duration**: Number of hours for the command to run (integer from 1 to 12).
     - **Power**: Integer value between 5–100%.
     - **SOC**: Target State of Charge (0–100%) in 1% steps; UI only allows steps of 5%.
 
   - **SET_BASIC_MODE**: Sets the device to idle/default mode.
 
     ```json
-    { "command": "SET_BASIC_MODE", "parameters": null }
+    { "command": "SET_BASIC_MODE", "duration": 2, "parameters": null }
     ```
 
   - **SET_DISCHARGE**: Sets the device to discharge mode.
 
     ```json
-    { "command": "SET_CHARGE", "parameters": { "power": 5, "soc": 10, "action": "ACTION_DISCHARGE" } }
+    { "command": "SET_CHARGE", "duration": 2, "parameters": { "power": 5, "soc": 10, "action": "ACTION_DISCHARGE" } }
     ```
 
+    - **Duration**: Number of hours for the command to run (integer from 1 to 12).
     - **Power**: Integer value between 5–100%.
     - **SOC**: Target State of Charge (0–100%) in 1% steps; UI only allows steps of 5%.
 
   - **SET_MAXIMIZE_AUTO_CONSUMPTION**: Maximizes auto consumption.
 
     ```json
-    { "command": "SET_MAXIMIZE_AUTO_CONSUMPTION", "parameters": null }
+    { "command": "SET_MAXIMIZE_AUTO_CONSUMPTION", "duration": 2, "parameters": null }
     ```
 
   - **SET_VARIABLE_GRID_INJECTION**: Sets variable grid injection.
 
     ```json
-    { "command": "SET_VARIABLE_GRID_INJECTION", "parameters": { "maximumPower": 0 } }
+    { "command": "SET_VARIABLE_GRID_INJECTION", "duration": 2, "parameters": { "maximumPower": 0 } }
     ```
 
   - **SET_FREQUENCY_REGULATION**: Sets frequency regulation.
 
     ```json
-    { "command": "SET_FREQUENCY_REGULATION", "parameters": { "powerAllocation": 0, "optimalSoc": 0 } }
+    { "command": "SET_FREQUENCY_REGULATION", "duration": 2, "parameters": { "powerAllocation": 0, "optimalSoc": 0 } }
     ```
 
   - **SET_PEAK_SHAVING**: Sets peak shaving.
 
     ```json
-    { "command": "SET_PEAK_SHAVING", "parameters": { "maxHousePeakConsumption": 0 } }
+    { "command": "SET_PEAK_SHAVING", "duration": 2, "parameters": { "maxHousePeakConsumption": 0 } }
     ```
 
 ---
