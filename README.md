@@ -36,6 +36,7 @@ This repository documents discovered API endpoints from an Eaton xStorage Home s
 | `/api/metrics`                    | GET    | No                          | Retrieves hourly metrics data.    |
 | `/api/metrics/daily`              | GET    | No                          | Retrieves daily metrics data.     |
 | `/api/schedule/`                  | GET    | No                          | Retrieves schedule information.   |
+| `/api/notifications/`             | GET    | No                          | Retrieves device notifications and alerts. |
 | `/api/technical/status`           | GET    | Yes                         | Retrieves technical status of the device. |
 | `/api/device/maintenance/diagnostics` | GET | Yes                         | Retrieves maintenance diagnostics. |
 | `/api/device/command`             | POST   | No                          | Sends commands to the device.     |
@@ -396,6 +397,78 @@ This repository documents discovered API endpoints from an Eaton xStorage Home s
   ```
 
 - **Comment**: Week metrics (shows data by the day).
+
+---
+
+### Notifications Endpoints
+
+#### `GET /api/notifications/`
+
+- **Description**: Retrieves device notifications and alerts.
+- **Query Parameters**:
+  - **status**: Filter by notification status (e.g., "NORMAL", "READ")
+  - **size**: Number of results to return (e.g., 4)
+  - **offset**: Starting position for pagination (e.g., 0)
+
+- **Response**:
+
+  ```json
+  {
+    "successful": true,
+    "message": "Content Ready",
+    "result": {
+      "total": 5,
+      "start": 0,
+      "sort": "",
+      "order": "",
+      "size": 4,
+      "results": [
+        {
+          "updatedAt": 1753485589000,
+          "createdAt": 1753467646000,
+          "alertId": "35eefa26-ea2f-4ef4-a96f-6611fbfede75",
+          "previousAlertId": "377efe13-a5fb-4b03-ac33-66e982060c98",
+          "level": "INFO",
+          "type": "DEVICES",
+          "subType": "BATTERY_VOLTAGE_LOW",
+          "status": "READ"
+        },
+        {
+          "updatedAt": 1753485589000,
+          "createdAt": 1753467340000,
+          "alertId": "377efe13-a5fb-4b03-ac33-66e982060c98",
+          "previousAlertId": "",
+          "level": "CRITICAL",
+          "type": "DEVICES",
+          "subType": "BATTERY_VOLTAGE_LOW",
+          "status": "READ"
+        },
+        {
+          "updatedAt": 1752545790000,
+          "createdAt": 1752506923000,
+          "alertId": "386cf39c-4d18-469b-a778-20f4ed0ffecc",
+          "previousAlertId": "7de50ceb-8a8f-48b9-ac55-234564eb75b1",
+          "level": "INFO",
+          "type": "DEVICES",
+          "subType": "BATTERY_VOLTAGE_HIGH",
+          "status": "READ"
+        },
+        {
+          "updatedAt": 1752545790000,
+          "createdAt": 1752489067000,
+          "alertId": "7de50ceb-8a8f-48b9-ac55-234564eb75b1",
+          "previousAlertId": "",
+          "level": "CRITICAL",
+          "type": "DEVICES",
+          "subType": "BATTERY_VOLTAGE_HIGH",
+          "status": "READ"
+        }
+      ]
+    }
+  }
+  ```
+
+- **Comment**: Returns notifications and alerts with severity levels (INFO, CRITICAL) and battery-related subtypes. Supports pagination and filtering.
 
 ---
 
