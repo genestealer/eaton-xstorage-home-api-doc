@@ -37,6 +37,7 @@ This repository documents discovered API endpoints from an Eaton xStorage Home s
 | `/api/metrics/daily`              | GET    | No                          | Retrieves daily metrics data.     |
 | `/api/schedule/`                  | GET    | No                          | Retrieves schedule information.   |
 | `/api/notifications/`             | GET    | No                          | Retrieves device notifications and alerts. |
+| `/api/notifications/unread`       | GET    | No                          | Retrieves count of unread notifications. |
 | `/api/notifications/read/all`     | POST   | No                          | Marks all notifications as read. |
 | `/api/technical/status`           | GET    | Yes                         | Retrieves technical status of the device. |
 | `/api/device/maintenance/diagnostics` | GET | Yes                         | Retrieves maintenance diagnostics. |
@@ -470,6 +471,26 @@ This repository documents discovered API endpoints from an Eaton xStorage Home s
   ```
 
 - **Comment**: Returns notifications and alerts with severity levels (INFO, CRITICAL) and battery-related subtypes. Supports pagination and filtering.
+
+#### `GET /api/notifications/unread`
+
+- **Description**: Retrieves count of unread notifications.
+- **Query Parameters**:
+  - **status**: Filter by notification status (e.g., "NORMAL")
+
+- **Response**:
+
+  ```json
+  {
+    "successful": true,
+    "message": "Content Ready",
+    "result": {
+      "total": 0
+    }
+  }
+  ```
+
+- **Comment**: Returns the total count of unread notifications. Useful for displaying notification badges or counts in the UI.
 
 #### `POST /api/notifications/read/all`
 
