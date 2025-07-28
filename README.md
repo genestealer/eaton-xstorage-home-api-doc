@@ -37,6 +37,7 @@ This repository documents discovered API endpoints from an Eaton xStorage Home s
 | `/api/metrics/daily`              | GET    | No                          | Retrieves daily metrics data.     |
 | `/api/schedule/`                  | GET    | No                          | Retrieves schedule information.   |
 | `/api/notifications/`             | GET    | No                          | Retrieves device notifications and alerts. |
+| `/api/notifications/read/all`     | POST   | No                          | Marks all notifications as read. |
 | `/api/technical/status`           | GET    | Yes                         | Retrieves technical status of the device. |
 | `/api/device/maintenance/diagnostics` | GET | Yes                         | Retrieves maintenance diagnostics. |
 | `/api/device/command`             | POST   | No                          | Sends commands to the device.     |
@@ -469,6 +470,22 @@ This repository documents discovered API endpoints from an Eaton xStorage Home s
   ```
 
 - **Comment**: Returns notifications and alerts with severity levels (INFO, CRITICAL) and battery-related subtypes. Supports pagination and filtering.
+
+#### `POST /api/notifications/read/all`
+
+- **Description**: Marks all notifications as read.
+- **Request**: No body required (content-length: 0).
+- **Response**:
+
+  ```json
+  {
+    "successful": true,
+    "message": "Successfully updated",
+    "result": null
+  }
+  ```
+
+- **Comment**: Simple endpoint to mark all notifications as read. Returns a success confirmation message.
 
 ---
 
