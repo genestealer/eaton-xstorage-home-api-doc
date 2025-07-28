@@ -39,6 +39,7 @@ This repository documents discovered API endpoints from an Eaton xStorage Home s
 | `/api/technical/status`           | GET    | Yes                         | Retrieves technical status of the device. |
 | `/api/device/maintenance/diagnostics` | GET | Yes                         | Retrieves maintenance diagnostics. |
 | `/api/device/command`             | POST   | No                          | Sends commands to the device.     |
+| `/api/device/power`               | POST   | No                          | Controls the power state of the device (on/off). |
 | `/api/auth/signin`                | POST   | No                          | Authenticates a user and retrieves a token. |
 
 ---
@@ -451,6 +452,27 @@ This repository documents discovered API endpoints from an Eaton xStorage Home s
     ```json
     { "command": "SET_PEAK_SHAVING", "duration": 2, "parameters": { "maxHousePeakConsumption": 0 } }
     ```
+
+---
+
+### Power Control Endpoints
+
+#### `POST /api/device/power`
+
+- **Description**: Controls the power state of the device (on/off).
+- **Request**:
+
+  ```json
+  {
+    "parameters": {
+      "state": false
+    }
+  }
+  ```
+
+  - **state**: Boolean value to control power state (true = on, false = off).
+
+- **Comment**: When the device is turned off, the "powerState" field in other API responses will return false.
 
 ---
 
