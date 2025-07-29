@@ -21,6 +21,32 @@ This repository documents discovered API endpoints from an Eaton xStorage Home s
 
 ---
 
+## Web Interface Screenshots
+
+The following screenshots show the various pages and functionality of the xStorage Home web interface:
+
+### Dashboard Overview
+![Dashboard 1](screenshots/Dashboard1.jpg)
+*Main dashboard showing system status and energy flow*
+
+### System Status
+![Dashboard 2](screenshots/Dashboard2.jpg)
+*Detailed system status and battery information*
+
+### Energy Metrics
+![Dashboard 3](screenshots/Dashboard3.jpg)
+*Energy consumption and production metrics*
+
+### Device Settings
+![Dashboard 4](screenshots/Dashboard4.jpg)
+*Device configuration and settings interface*
+
+### Technical Information
+![Dashboard 5](screenshots/Dashboard5.jpg)
+*Technical details and system diagnostics*
+
+---
+
 ## License & Legal
 
 This documentation is provided for educational, research, and interoperability purposes only. The API endpoints documented here were discovered through legitimate reverse engineering techniques for personal use with owned hardware.
