@@ -10,17 +10,54 @@ This repository documents discovered API endpoints from an Eaton xStorage Home s
 
 ## Notes
 
+- **Product Status**: This product appears to be end of life. This repository includes an archive of their documentation and encrypted signed firmware for archival purposes.
 - **Firmware Version**: Running firmware version `00.01.0017-0-g72006700`.
 - **HTTPS Access**: To avoid certificate errors, access the HTTPS interface via an HTTPS proxy server (e.g., NGINX).
+- **SSH Access**: The built-in SSH server (created on-demand) appears to be broken, as evidenced by logs downloadable from the web interface. SSH access is not available.
+- **Web Interface**: Screenshots of the web interface are included in this repository for reference.
 - All endpoints require authentication using Bearer tokens.
 - Bearer tokens expire after 60 minutes.
 - Some endpoints are restricted to technician profiles and will return a `403 Forbidden` error for customer profiles.
 
 ---
 
+## License & Legal
+
+This documentation is provided for educational, research, and interoperability purposes only. The API endpoints documented here were discovered through legitimate reverse engineering techniques for personal use with owned hardware.
+
+**MIT License**
+
+Copyright (c) 2025 genestealer
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this documentation and associated files (the "Documentation"), to deal
+in the Documentation without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Documentation, and to permit persons to whom the Documentation is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Documentation.
+
+THE DOCUMENTATION IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE DOCUMENTATION OR THE USE OR OTHER DEALINGS IN THE
+DOCUMENTATION.
+
+**Additional Disclaimers:**
+- API endpoint documentation: Licensed under MIT as above
+- Firmware files: Archived for preservation purposes only - all rights remain with Eaton Corporation
+- This project claims no ownership over Eaton's intellectual property
+- Eaton® and xStorage Home® are trademarks of Eaton Corporation
+
+---
+
 ## To-Do List
 
-1. SSH into the controller and look for more endpoints.
+1. ~~SSH into the controller and look for more endpoints.~~ (SSH server is broken - see Notes)
 2. Review the provided top-level firmware specification for the controller for more information.
 
 ---

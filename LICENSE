@@ -3,19 +3,31 @@ MIT License
 Copyright (c) 2025 Richard
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
+of this documentation and associated files (the "Documentation"), to deal
+in the Documentation without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
+copies of the Documentation, and to permit persons to whom the Documentation is
 furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+copies or substantial portions of the Documentation.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+THE DOCUMENTATION IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE DOCUMENTATION OR THE USE OR OTHER DEALINGS IN THE
+DOCUMENTATION.
+
+ADDITIONAL DISCLAIMERS:
+
+This documentation is provided for educational, research, and interoperability 
+purposes only. The API endpoints documented here were discovered through 
+legitimate reverse engineering techniques for personal use with owned hardware.
+
+- API endpoint documentation: Licensed under MIT as above
+- Firmware files: Archived for preservation purposes only - all rights remain with Eaton Corporation
+- This project claims no ownership over Eaton's intellectual property
+- Eaton® and xStorage Home® are trademarks of Eaton Corporation
+- This project is not affiliated with or endorsed by Eaton Corporation
