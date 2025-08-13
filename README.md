@@ -6,21 +6,128 @@ This repository documents discovered API endpoints from an Eaton xStorage Home s
 
 > ⚠️ This project is **not affiliated with or endorsed by Eaton**. Use at your own risk.
 
+## Table of Contents
+
+- [Important Notice - Cloud Service Shutdown](#important-notice---cloud-service-shutdown)
+- [Quick Start Guide](#quick-start-guide)
+- [System Overview](#system-overview)
+- [Web Interface Screenshots](#web-interface-screenshots)
+- [API Authentication & Usage](#api-authentication--usage)
+- [Operation Modes Reference](#operation-modes-reference)
+- [Technical System Information](#technical-system-information)
+- [API Endpoints](#api-endpoints)
+- [Data Export and Monitoring](#data-export-and-monitoring-alternatives)
+- [License & Legal](#license--legal)
+
 ---
 
-## Notes
+## Important Notice - Cloud Service Shutdown
 
-- **Product Status**: This product appears to be end of life. This repository includes an archive of their documentation and encrypted signed firmware for archival purposes.
-- **Cloud Service Discontinuation**: ⚠️ **After September 1st, 2025, xStorage Home Cloud (xstoragehome.com) will be disabled permanently**. Remote monitoring capabilities and cloud-based notifications/alerts will no longer be available. Hardware warranty remains unchanged.
-- **Data Export Recommendation**: Users should export historical data from the local web interface before cloud shutdown (Charts → Export → CSV download with 5-minute granularity).
-- **Firmware Version**: Running firmware version `00.01.0017-0-g72006700`.
-- **HTTPS Access**: To avoid certificate errors, access the HTTPS interface via an HTTPS proxy server (e.g., NGINX).
-- **SSH Access**: The built-in SSH server (created on-demand) appears to be broken, as evidenced by logs downloadable from the web interface. SSH access is not available.
-- **Web Interface**: Screenshots of the web interface are included in this repository for reference.
-- **Local Monitoring Alternative**: Home Assistant with community plugins can provide notifications and remote monitoring capabilities after cloud shutdown.
-- All endpoints require authentication using Bearer tokens.
-- Bearer tokens seem to expire after 60 minutes.
-- Some endpoints are restricted to technician profiles and will return a `403 Forbidden` error for customer profiles.
+⚠️ **Critical Information for Users**
+
+- **Cloud Shutdown Date**: After **September 1st, 2025**, xStorage Home Cloud (xstoragehome.com) will be **permanently disabled**
+- **Impact**: Remote monitoring capabilities and cloud-based notifications/alerts will no longer be available
+- **Action Required**: Export your historical data before the shutdown date
+- **Hardware Warranty**: Remains unchanged despite cloud service discontinuation
+
+**How to Export Your Data:**
+
+1. Access your device's web interface at `https://[device-ip]`
+2. Navigate to Charts → Export → CSV download
+3. Select date range and download with 5-minute granularity
+
+---
+
+## Quick Start Guide
+
+### Default Access Credentials
+
+If you can't access your system, try these default credentials:
+
+- **Customer Account**: Username: `user`, Password: `user`
+- **Technician Account**: Username: `admin`, Password: `jlwgK41G`
+
+### Basic API Usage
+
+1. **Authentication**: Get a Bearer token from `/api/auth/signin`
+2. **Device Info**: Check system status with `/api/device/status`
+3. **Control System**: Send commands via `/api/device/command`
+
+**Important API Notes:**
+
+- All endpoints require Bearer token authentication
+- Tokens expire after ~60 minutes
+- Some endpoints require technician-level access
+- Use HTTPS to avoid certificate errors (consider using NGINX proxy)
+
+---
+
+## System Overview
+
+### Product Status & Firmware
+
+- **Product Status**: End of life - this repository archives documentation and firmware
+- **Firmware Version**: Running `00.01.0017-0-g72006700`
+- **SSH Access**: Built-in SSH server is broken - not available
+- **Local Alternatives**: Home Assistant with community plugins can replace cloud monitoring
+
+---
+
+## API Authentication & Usage
+
+### Authentication Process
+
+All API endpoints require authentication using Bearer tokens obtained from the signin endpoint.
+
+#### Default Credentials
+
+If you've forgotten your credentials, try the default ones:
+
+- **Customer Account**: Username: `user`, Password: `user`  
+- **Technician Account**: Username: `admin`, Password: `jlwgK41G`
+
+#### Getting a Bearer Token
+
+**For Customer Access:**
+
+```bash
+curl -X POST "https://your-device-ip/api/auth/signin" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "username": "user",
+    "pwd": "user", 
+    "userType": "customer"
+  }'
+```
+
+**For Technician Access:**
+
+```bash
+curl -X POST "https://your-device-ip/api/auth/signin" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "username": "admin",
+    "pwd": "jlwgK41G",
+    "inverterSn": "REDACTED", 
+    "email": "anything@anything.com",
+    "userType": "tech"
+  }'
+```
+
+#### Using the Bearer Token
+
+Include the token in all API requests:
+
+```bash
+curl "https://your-device-ip/api/device/status" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+**Token Notes:**
+
+- Bearer tokens expire after approximately 60 minutes
+- Some endpoints require technician-level access
+- Customer accounts will receive `403 Forbidden` for technician-only endpoints
 
 ---
 
@@ -59,110 +166,127 @@ The following screenshots show the various pages and functionality of the xStora
 
 Based on the official Eaton xStorage Home Operation Modes Manual (MN700004EN, April 2019), the following operation modes are available for the xStorage Home system. These modes can be configured via the `/api/device/command` endpoint or through the web interface.
 
-### Mode Priority System
+### Understanding Mode Priority
 
-Operation modes follow a priority hierarchy:
+Operation modes follow a strict priority hierarchy:
 
-1. **Dashboard** - Highest priority (manual override)
-2. **Schedule** - Medium priority (scheduled events)
-3. **General Settings** - Lowest priority (default mode)
+1. **Dashboard (Manual)** - Highest priority - immediate manual override
+2. **Schedule** - Medium priority - time-based scheduled events  
+3. **General Settings** - Lowest priority - default system behavior
+
+When multiple modes are configured, the highest priority active mode takes precedence.
+
+---
 
 ### Manual Operating Modes
 
-Manual modes provide direct control over the system but don't contribute to energy usage optimization:
+Manual modes provide direct control but don't contribute to energy optimization:
 
-- **Unit On (Basic Mode)**: `SET_BASIC_MODE` - System converts energy from PV panels
-- **Unit Off (Standby)**: System powered down via `/api/device/power` endpoint
-- **Charge**: `SET_CHARGE` - Battery pack charging mode
-- **Discharge**: `SET_DISCHARGE` - Battery pack discharging mode
+#### Unit On (Basic Mode)
+- **Command**: `SET_BASIC_MODE`
+- **Purpose**: Basic system operation without intelligent optimization
+- **Operation**: System converts energy from PV panels but operates in simple mode
+- **Use Case**: Manual control when you want predictable, non-automated behavior
+
+#### Unit Off (Standby)
+- **Control**: Via `/api/device/power` endpoint  
+- **Purpose**: Power down the system completely
+- **Operation**: System enters standby mode with minimal power consumption
+
+#### Manual Charge
+- **Command**: `SET_CHARGE`
+- **Purpose**: Force battery charging regardless of other conditions
+- **Operation**: Battery charges from available PV or grid power
+- **Use Case**: Prepare for expected power outage or peak rate periods
+
+#### Manual Discharge  
+- **Command**: `SET_DISCHARGE`
+- **Purpose**: Force battery discharge to power loads or export to grid
+- **Operation**: Battery discharges at specified power level until target SOC reached
+- **Use Case**: Use stored energy during peak rate periods or grid export for income
+
+---
 
 ### Intelligent Operating Modes
 
-Intelligent modes are designed to maximize solar energy usage and enable cost savings through autonomous operation:
+Intelligent modes maximize solar energy usage and enable cost savings through autonomous operation:
 
-#### 1. Maximize Auto-Consumption (MAC) - `SET_MAXIMIZE_AUTO_CONSUMPTION`
+#### 1. Maximize Auto-Consumption (MAC)
+- **Command**: `SET_MAXIMIZE_AUTO_CONSUMPTION`
+- **Purpose**: Maximize utilization of PV-generated energy and minimize grid consumption
 
-**Purpose**: Maximize utilization of PV-generated energy and minimize grid consumption.
-
-**Operation**:
-
+**How it Works:**
 - Charges battery from excess PV energy during the day
-- Discharges battery to power loads when PV is insufficient
-- Stores energy for use during evening hours when electricity prices are higher
+- Discharges battery to power loads when PV is insufficient  
+- Stores energy for evening use when electricity prices are higher
 
-**Requirements**:
+**Requirements:**
+- **AC Coupled**: Both power meters required for full optimization
+- **DC Coupled**: Power Meter 1 required with separated critical/non-critical loads
+- **NO-PV**: Not applicable
 
-- AC Coupled: Both power meters required for full optimization
-- DC Coupled: Power Meter 1 required with separated critical/non-critical loads
-- NO-PV: Not applicable
+**Best For**: Installations with PV panels where the goal is energy self-sufficiency
 
-**Use Case**: Ideal for installations with PV panels where the goal is self-sufficiency.
+#### 2. Peak Shaving
+- **Command**: `SET_PEAK_SHAVING`
+- **Purpose**: Avoid penalty charges by preventing household consumption from exceeding contracted maximum peak power
 
-#### 2. Peak Shaving - `SET_PEAK_SHAVING`
+**Parameters:**
+- `maxHousePeakConsumption`: Maximum allowed household power (Watts)
 
-**Purpose**: Avoid penalty charges by preventing household consumption from exceeding contracted maximum peak power.
-
-**Parameters**:
-
-- `maxHousePeakConsumption`: Maximum allowed household power consumption (Watts)
-
-**Operation**:
-
-- Monitors total household consumption continuously
+**How it Works:**
+- Continuously monitors total household consumption
 - Automatically discharges battery when consumption exceeds threshold
-- Stops discharging when consumption falls below threshold
+- Stops discharging when consumption falls below threshold  
 - Can be combined with scheduled charging during low-tariff periods
 
-**Requirements**: Power Meter 1 must be installed for all installation types
+**Requirements:** Power Meter 1 must be installed for all installation types
 
-**Use Case**: Households with utility contracts that penalize peak consumption above contracted limits.
+**Best For**: Households with utility contracts that penalize peak consumption above contracted limits
 
-#### 3. Variable Grid Injection - `SET_VARIABLE_GRID_INJECTION`
+#### 3. Variable Grid Injection
+- **Command**: `SET_VARIABLE_GRID_INJECTION`  
+- **Purpose**: Control the amount of surplus PV energy injected back into the grid
 
-**Purpose**: Control the amount of surplus PV energy injected back into the grid.
-
-**Parameters**:
-
+**Parameters:**
 - `maximumPower`: Grid injection limit (-1000W to +3000W)
-  - Positive values: Maximum power injection to grid
-  - Negative values: Minimum power consumption from grid
+  - **Positive values**: Maximum power injection to grid
+  - **Negative values**: Minimum power consumption from grid
 
-**Operation**:
-
+**How it Works:**
 - Powers loads with PV energy first
 - Charges battery with surplus PV energy
 - Limits grid injection to specified maximum when battery is full
 - Prevents penalties from utilities that charge for grid injection
 
-**Requirements**: Power Meter 1 must be installed for all installation types
+**Requirements:** Power Meter 1 must be installed for all installation types
 
-**Use Case**: Areas where utilities penalize or limit grid injection of surplus solar energy.
+**Best For**: Areas where utilities penalize or limit grid injection of surplus solar energy
 
-#### 4. Frequency Regulation - `SET_FREQUENCY_REGULATION`
+#### 4. Frequency Regulation
+- **Command**: `SET_FREQUENCY_REGULATION`
+- **Purpose**: Provide grid frequency stabilization services to utilities or aggregators
 
-**Purpose**: Provide grid frequency stabilization services to utilities or aggregators.
-
-**Parameters**:
-
+**Parameters:**
 - `powerAllocation`: Power available for grid regulation (Watts)
 - `optimalSoc`: Target State of Charge for optimal regulation capacity (0-100%)
 
-**Operation**:
-
+**How it Works:**
 - Injects power to grid when frequency drops (e.g., below 50Hz in Europe)
-- Absorbs power from grid when frequency rises (e.g., above 50Hz in Europe)
+- Absorbs power from grid when frequency rises (e.g., above 50Hz in Europe)  
 - Maintains optimal SOC for maximum up/down regulation capacity
 - User receives remuneration for frequency stabilization services
 
-**Requirements**:
-
+**Requirements:**
 - No power meter required (system senses grid frequency automatically)
 - Critical loads cannot be connected when this mode is active
-- Not available for 6kW hybrid inverter systems
+- **Not available for 6kW hybrid inverter systems**
 
-**Use Case**: Commercial arrangements with utilities for grid stabilization services.
+**Best For**: Commercial arrangements with utilities for grid stabilization services
 
-### Installation Type Compatibility
+---
+
+### Mode Compatibility by Installation Type
 
 | Operation Mode | AC Coupled | DC Coupled | NO-PV |
 |---|---|---|---|
@@ -172,7 +296,9 @@ Intelligent modes are designed to maximize solar energy usage and enable cost sa
 | Variable Grid Injection | ✅ Meter 1 | ✅ Meter 1 | ✅ Meter 1 |
 | Frequency Regulation | ✅ No specific requirements | ✅ No specific requirements | ✅ No specific requirements |
 
-**Note**: Some operation modes may not be available in all countries due to local installation codes and regulations.
+> **Note**: Some operation modes may not be available in all countries due to local installation codes and regulations.
+
+> **Real-World Experience**: Maximize Auto-Consumption works effectively with AC Coupled installations using only Power Meter 1, even with a separate PV system. While the official documentation suggests both meters are required for "full optimization," basic auto-consumption functionality operates successfully with a single meter configuration.
 
 ---
 
@@ -389,7 +515,7 @@ DOCUMENTATION.
 
 ---
 
-## Summary Table
+## Summary Table - Quick Reference
 
 | Endpoint                          | Method | Requires Technician Account | Description                       |
 |-----------------------------------|--------|-----------------------------|-----------------------------------|
@@ -397,26 +523,44 @@ DOCUMENTATION.
 | `/api/device`                     | GET    | No                          | Retrieves device information.     |
 | `/api/device/status`              | GET    | No                          | Retrieves the current status of the device. |
 | `/api/settings`                   | GET    | No                          | Retrieves device settings.        |
+| `/api/settings/`                  | PUT    | No                          | Updates device settings including energy saving mode. |
 | `/api/metrics`                    | GET    | No                          | Retrieves hourly metrics data.    |
 | `/api/metrics/daily`              | GET    | No                          | Retrieves daily metrics data.     |
 | `/api/schedule/`                  | GET    | No                          | Retrieves schedule information.   |
 | `/api/notifications/`             | GET    | No                          | Retrieves device notifications and alerts. |
 | `/api/notifications/unread`       | GET    | No                          | Retrieves count of unread notifications. |
 | `/api/notifications/read/all`     | POST   | No                          | Marks all notifications as read. |
-| `/api/technical/status`           | GET    | Yes                         | Retrieves technical status of the device. |
-| `/api/device/maintenance/diagnostics` | GET | Yes                         | Retrieves maintenance diagnostics. |
 | `/api/device/command`             | POST   | No                          | Sends commands to the device.     |
 | `/api/device/power`               | POST   | No                          | Controls the power state of the device (on/off). |
-| `/api/settings/`                  | PUT    | No                          | Updates device settings including energy saving mode. |
 | `/api/auth/signin`                | POST   | No                          | Authenticates a user and retrieves a token. |
+| `/api/technical/status`           | GET    | Yes                         | Retrieves technical status of the device. |
+| `/api/device/maintenance/diagnostics` | GET | Yes                         | Retrieves maintenance diagnostics. |
 
 ---
 
 ## API Endpoints
 
-### General Endpoints
+This section documents all available API endpoints organized by category. Remember that all endpoints require Bearer token authentication.
 
-#### `GET /api/config/state`
+### Quick Reference
+
+| Category | Purpose | Requires Tech Account |
+|----------|---------|----------------------|
+| **System Information** | Device details, status, settings | No |
+| **Metrics & Data** | Historical data and metrics | No |
+| **Notifications** | Alerts and system messages | No |
+| **Device Control** | Commands and power control | No |
+| **Technical Diagnostics** | Advanced system information | Yes |
+
+---
+
+### System Information Endpoints
+
+These endpoints provide basic system information accessible to both customer and technician accounts.
+
+#### Get Configuration State
+
+**`GET /api/config/state`**
 
 - **Description**: Retrieves the current configuration state of the system.
 - **Response**:
@@ -441,7 +585,9 @@ DOCUMENTATION.
 
 - **Comment**: Not much useful information.
 
-#### `GET /api/device`
+#### Get Device Information
+
+**`GET /api/device`**
 
 - **Description**: Retrieves device information.
 - **Response**:
@@ -462,7 +608,7 @@ DOCUMENTATION.
               "name": "United Kingdom"
           },
           "city": {
-              "geonameId": "2649833",
+              "geonameId": "REDACTED",
               "name": "London"
           },
           "postalCode": "",
@@ -499,16 +645,16 @@ DOCUMENTATION.
                   "updatedAt": 0,
                   "createdAt": 0,
                   "name": "eth0",
-                  "macAddress": "00:20:85:f2:00:35",
-                  "ipAddress": "192.168.3.35"
+                  "macAddress": "REDACTED",
+                  "ipAddress": "REDACTED"
               },
               {
                   "id": "",
                   "updatedAt": 0,
                   "createdAt": 0,
                   "name": "wlan0",
-                  "macAddress": "74:da:38:99:5a:b5",
-                  "ipAddress": "192.168.3.52"
+                  "macAddress": "REDACTED",
+                  "ipAddress": "REDACTED"
               }
           ],
           "powerMeters": [
@@ -550,7 +696,9 @@ DOCUMENTATION.
 
 - **Comment**: Lots of good information.
 
-#### `GET /api/device/status`
+#### Get Device Status
+
+**`GET /api/device/status`**
 
 - **Description**: Retrieves the current status of the device.
 - **Response**:
@@ -621,7 +769,9 @@ DOCUMENTATION.
 
 - **Comment**: Lots of good information.
 
-#### `GET /api/settings`
+#### Get Device Settings
+
+**`GET /api/settings`**
 
 - **Description**: Retrieves device settings.
 - **Response**:
@@ -644,7 +794,7 @@ DOCUMENTATION.
               "name": "United Kingdom"
           },
           "city": {
-              "geonameId": "2649833",
+              "geonameId": "REDACTED",
               "name": "London"
           },
           "postalCode": "",
@@ -659,7 +809,7 @@ DOCUMENTATION.
               "parameters": null
           },
           "firmwareVersion": "00.01.0017-0-g72006700",
-          "bmsSerialNumber": "H-B60-H-41-031",
+          "bmsSerialNumber": "REDACTED",
           "commCardFirmwareVersion": "",
           "inverterFirmwareVersion": "00.06.0069",
           "inverterSerialNumber": "REDACTED",
@@ -684,16 +834,16 @@ DOCUMENTATION.
                   "updatedAt": 0,
                   "createdAt": 0,
                   "name": "eth0",
-                  "macAddress": "00:20:85:f2:00:35",
-                  "ipAddress": "192.168.3.35"
+                  "macAddress": "REDACTED",
+                  "ipAddress": "REDACTED"
               },
               {
                   "id": "",
                   "updatedAt": 0,
                   "createdAt": 0,
                   "name": "wlan0",
-                  "macAddress": "74:da:38:99:5a:b5",
-                  "ipAddress": "192.168.3.52"
+                  "macAddress": "REDACTED",
+                  "ipAddress": "REDACTED"
               }
           ],
           "powerMeters": [
@@ -726,22 +876,21 @@ DOCUMENTATION.
 
   ```
 
-- **Comment**: Lots of good information.
-
 #### `PUT /api/settings/`
 
 - **Description**: Updates device settings including energy saving mode configuration.
+- **Important**: ⚠️ **You must include ALL current settings values in the request payload, not just the parameter you want to change**. The API appears to replace all settings with the provided values. Get current values from `GET /api/settings` first, then modify only the specific parameter you want to update.
 - **Request**:
 
   ```json
   {
     "settings": {
-      "name": "1705Z01700041",
+      "name": "REDACTED",
       "country": "2635167",
       "timezone": "Europe/London",
-      "city": "2649833",
+      "city": "REDACTED",
       "postalCode": "",
-      "bmsBackupLevel": 0,
+      "bmsBackupLevel": 20,
       "updateBlockedState": false,
       "defaultMode": {
         "command": "SET_BASIC_MODE",
@@ -755,26 +904,217 @@ DOCUMENTATION.
   }
   ```
 
-  - **energySavingMode.enabled**: Boolean value to enable/disable energy saving mode.
-  - **energySavingMode.houseConsumptionThreshold**: Integer value between 300W and 1000W for the house consumption threshold.
+  - `bmsBackupLevel`: Integer value between 0 and 100 (percentage) for the minimum battery backup level reserved for emergency power
+  - `defaultMode`: Object defining the system's default operational mode when no manual commands or schedules are active
+    - `command`: The default operation mode command (e.g., "SET_BASIC_MODE", "SET_FREQUENCY_REGULATION", "SET_MAXIMIZE_AUTO_CONSUMPTION")
+    - `parameters`: Object containing mode-specific parameters (varies by command type)
+  - `energySavingMode`: Object controlling the energy saving functionality
+    - `enabled`: String value "true" or "false" to enable/disable energy saving mode
+    - `houseConsumptionThreshold`: Integer value between 300 and 1000 for the house consumption threshold in Watts
 
 - **Response**:
 
   ```json
   {
     "successful": true,
-    "message": "Successfully updated",
-    "result": null
+    "message": "Content Ready",
+    "result": {
+      "id": "7cf91ea7-a0be-4d06-906b-f8853ad7297c",
+      "updatedAt": 1753829187,
+      "createdAt": 1753829187,
+      "name": "REDACTED",
+      "description": "",
+      "hasPv": false,
+      "hasBattery": true,
+      "address": "",
+      "country": {
+        "geonameId": "2635167",
+        "name": "United Kingdom"
+      },
+      "city": {
+        "geonameId": "REDACTED",
+        "name": "REDACTED"
+      },
+      "postalCode": "",
+      "latitude": 0,
+      "longitude": 0,
+      "defaultMode": {
+        "id": "8870c322-0f3d-4d7f-a701-b664da32448c",
+        "updatedAt": 1752284944,
+        "createdAt": 1752284944,
+        "user": null,
+        "command": "SET_BASIC_MODE",
+        "parameters": null
+      },
+      "firmwareVersion": "00.01.0017-0-g72006700",
+      "bmsSerialNumber": "REDACTED",
+      "commCardFirmwareVersion": "",
+      "inverterFirmwareVersion": "00.06.0069",
+      "inverterSerialNumber": "REDACTED",
+      "inverterPowerRating": 0,
+      "bmsFirmwareVersion": "4004",
+      "bmsBackupLevel": 19,
+      "timezone": {
+        "id": "Europe/London",
+        "updatedAt": 0,
+        "createdAt": 0,
+        "timezone": "Europe/London",
+        "countryId": "",
+        "name": "Europe/London",
+        "version": ""
+      },
+      "dns": "REDACTED",
+      "inverterIsSinglePhase": true,
+      "bmsCapacity": 4.2,
+      "networkInterfaces": [
+        {
+          "id": "",
+          "updatedAt": 0,
+          "createdAt": 0,
+          "name": "eth0",
+          "macAddress": "REDACTED",
+          "ipAddress": "REDACTED"
+        }
+      ],
+      "powerMeters": [
+        {
+          "id": "",
+          "updatedAt": 0,
+          "createdAt": 0,
+          "position": 1,
+          "model": "Eastron SDM 120CT-Modbus",
+          "singlePhase": true
+        },
+        {
+          "id": "",
+          "updatedAt": 0,
+          "createdAt": 0,
+          "position": 2,
+          "model": "None",
+          "singlePhase": true
+        }
+      ],
+      "updateBlockedState": false,
+      "bundleVersion": "v1.17",
+      "localPortalRemoteId": "47221",
+      "energySavingMode": {
+        "enabled": true,
+        "houseConsumptionThreshold": 500
+      }
+    }
   }
   ```
 
-- **Comment**: Updates various device settings. The energy saving mode can be toggled on/off and the house consumption threshold can be adjusted within the 300-1000W range.
+- **Comment**: Updates various device settings including battery backup level, energy saving mode, and other system parameters. The battery backup level ensures a minimum SOC is always reserved for emergency power during grid outages. **Critical**: Always include all current settings values in the request - the API replaces all settings, so omitting values may reset them to defaults.
+
+**Recommended Workflow for Updates:**
+
+1. **Get Current Settings**: Call `GET /api/settings` to retrieve all current values
+2. **Modify Target Parameter**: Change only the specific parameter you want to update (e.g., `bmsBackupLevel: 19`)
+3. **Send Complete Payload**: Include ALL settings values in the PUT request
+
+**Key Settings Explanation:**
+
+**1. Battery Backup Level (`bmsBackupLevel`)**
+
+- **Purpose**: Sets the minimum State of Charge (SOC) reserved for emergency backup power during grid outages
+- **Range**: Integer between 0 and 100 (percentage)
+- **Example**: `"bmsBackupLevel": 19` reserves 19% of battery capacity for backup power
+- **Impact**: During normal operation, the battery will not discharge below this level, ensuring power is always available for critical loads during outages
+
+**2. Default Mode (`defaultMode`)**
+
+- **Purpose**: Defines the system's automatic operational behavior when no manual commands or scheduled events are active
+- **Structure**: Object with `command` and `parameters` properties
+- **Example**:
+
+  ```json
+  "defaultMode": {
+    "command": "SET_FREQUENCY_REGULATION",
+    "parameters": {
+      "powerAllocation": 0,
+      "optimalSoc": 28
+    }
+  }
+  ```
+
+- **Common Commands**:
+  - `"SET_BASIC_MODE"` - Basic operation mode (parameters: `{}` or `null`)
+  - `"SET_MAXIMIZE_AUTO_CONSUMPTION"` - Maximize self-consumption (parameters: `{}` or `null`)
+  - `"SET_FREQUENCY_REGULATION"` - Grid stabilization (parameters: `{"powerAllocation": 0, "optimalSoc": 28}`)
+  - `"SET_VARIABLE_GRID_INJECTION"` - Grid injection control (parameters: `{"maximumPower": 0}`)
+  - `"SET_PEAK_SHAVING"` - Peak consumption control (parameters: `{"maxHousePeakConsumption": 0}`)
+  - `"SET_CHARGE"` - Manual charging (parameters: `{"power": 10, "soc": 90, "action": "ACTION_CHARGE"}`)
+  - `"SET_DISCHARGE"` - Manual discharging (parameters: `{"power": 10, "soc": 10, "action": "ACTION_DISCHARGE"}`)
+- **Impact**: This mode becomes active when manual commands expire and no scheduled events are running
+
+**3. Energy Saving Mode (`energySavingMode`)**
+
+- **Purpose**: Automatically reduces system activity when household consumption is below a threshold
+- **Structure**: Object with `enabled` and `houseConsumptionThreshold` properties
+- **Example**:
+
+  ```json
+  "energySavingMode": {
+    "enabled": true,
+    "houseConsumptionThreshold": 600
+  }
+  ```
+
+- **Parameters**:
+  - `enabled`: String value "true" or "false" to activate/deactivate the feature
+  - `houseConsumptionThreshold`: Power threshold in Watts (integer between 300 and 1000)
+- **Impact**: When enabled and household consumption drops below the threshold, the system enters a lower-power state to reduce standby consumption
+
+**Real Example** (based on actual API call):
+
+```bash
+# 1. First get current settings
+curl "https://your-device-ip/api/settings" -H "Authorization: Bearer YOUR_TOKEN"
+
+# 2. Then update with complete payload including the change
+curl "https://your-device-ip/api/settings/" \
+  -X PUT \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "settings": {
+      "name": "REDACTED",
+      "country": "2635167", 
+      "timezone": "Europe/London",
+      "city": "REDACTED",
+      "postalCode": "",
+      "bmsBackupLevel": 19,
+      "updateBlockedState": false,
+      "defaultMode": {
+        "command": "SET_FREQUENCY_REGULATION",
+        "parameters": {
+          "powerAllocation": 0,
+          "optimalSoc": 28
+        }
+      },
+      "energySavingMode": {
+        "enabled": true,
+        "houseConsumptionThreshold": 600
+      }
+    }
+  }'
+
+This example shows:
+
+- **Battery Backup Level**: Set to 19% (reserves ~0.8 kWh for emergency backup on a 4.2 kWh system)
+- **Default Mode**: Frequency Regulation with 0W power allocation and 28% optimal SOC target
+- **Energy Saving**: Enabled with 600W threshold (system enters low-power mode when house consumption drops below 600W)
 
 ---
 
-### Metrics Endpoints
+### Metrics & Data Endpoints
 
-#### `GET /api/metrics`
+These endpoints provide access to historical data and system metrics.
+
+#### Get Hourly Metrics
+
+**`GET /api/metrics`**
 
 - **Description**: Retrieves hourly metrics data.
 - **Response**:
@@ -791,7 +1131,9 @@ DOCUMENTATION.
 
 - **Comment**: Day metrics (shows data by the hour).
 
-#### `GET /api/metrics/daily`
+#### Get Daily Metrics
+
+**`GET /api/metrics/daily`**
 
 - **Description**: Retrieves daily metrics data.
 - **Response**:
@@ -809,9 +1151,13 @@ DOCUMENTATION.
 
 ---
 
-### Notifications Endpoints
+### Notifications & Alerts
 
-#### `GET /api/notifications/`
+These endpoints manage system notifications and alerts.
+
+#### Get Notifications
+
+**`GET /api/notifications/`**
 
 - **Description**: Retrieves device notifications and alerts.
 - **Query Parameters**:
@@ -917,15 +1263,36 @@ DOCUMENTATION.
 
 ---
 
-### Command Endpoints
+### Device Control
 
-#### `POST /api/device/command`
+These endpoints allow you to control system operation and power state.
 
-Commands control the operational mode of the xStorage Home system. Each command follows the priority hierarchy: Dashboard > Schedule > General Settings. See the Operation Modes Reference section above for detailed explanations of each mode.
+#### Send Device Commands
+
+**`POST /api/device/command`**
+
+Commands control the operational mode of the xStorage Home system. Each command follows the priority hierarchy: Dashboard > Schedule > General Settings. See the [Operation Modes Reference](#operation-modes-reference) section for detailed explanations of each mode.
 
 **Common Parameters for all commands:**
 
 - `duration`: Number of hours for the command to run (integer from 1 to 12)
+
+**Available Operation Mode Commands:**
+
+| Command | Type | Parameters Required | Description |
+|---------|------|-------|-------------|
+| `SET_BASIC_MODE` | Manual | None | Basic operation mode (Unit On) |
+| `SET_CHARGE` | Manual | `power`, `soc`, `action` | Manual battery charging mode |
+| `SET_DISCHARGE` | Manual | `power`, `soc`, `action` | Manual battery discharging mode |
+| `SET_MAXIMIZE_AUTO_CONSUMPTION` | Intelligent | None | Maximize Auto-Consumption of PV energy |
+| `SET_VARIABLE_GRID_INJECTION` | Intelligent | `maximumPower` | Variable Grid Injection - control grid injection limits |
+| `SET_FREQUENCY_REGULATION` | Intelligent | `powerAllocation`, `optimalSoc` | Frequency Regulation - grid frequency stabilization services |
+| `SET_PEAK_SHAVING` | Intelligent | `maxHousePeakConsumption` | Peak Shaving - prevent peak consumption penalties |
+
+**Acronym Definitions:**
+
+
+- **SOC**: State of Charge - battery charge level (0-100%)
 
 ---
 
@@ -1031,51 +1398,13 @@ Commands control the operational mode of the xStorage Home system. Each command 
 
 ---
 
-### Authentication Endpoints
+### Technical Diagnostics (Technician Only)
 
-#### `POST /api/auth/signin`
+These endpoints require technician-level authentication and provide advanced system diagnostics.
 
-- **Description**: Authenticates a user and retrieves a token.
-- **Default Credentials**: If you've forgotten your credentials, try the default ones:
-  - **Customer**: Username: `user`, Password: `user`
-  - **Technician**: Username: `admin`, Password: `jlwgK41G`
-- **Request**:
-  - **Technician**:
+#### Get Technical Status
 
-    ```json
-    {
-      "username": "admin",
-      "pwd": "jlwgK41G",
-      "inverterSn": "REDACTED",
-      "email": "anything@anything.com",
-      "userType": "tech"
-    }
-    ```
-
-    - **Note**: When signing in with the Technician account, the email address can be anything.
-  - **Customer**:
-
-    ```json
-    {
-      "username": "user",
-      "pwd": "user",
-      "userType": "customer"
-    }
-    ```
-
-- **Response**:
-
-  ```json
-  {
-    "": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
-  ```
-
----
-
-### Technical Status Endpoint
-
-#### `GET /api/technical/status`
+**`GET /api/technical/status`**
 
 - **Description**: Retrieves technical status of the device.
 - **Note**: Requires technician login; customer accounts will receive a 403 Forbidden error.
