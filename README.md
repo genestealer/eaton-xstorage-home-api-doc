@@ -909,7 +909,7 @@ These endpoints provide basic system information accessible to both customer and
     - `command`: The default operation mode command (e.g., "SET_BASIC_MODE", "SET_FREQUENCY_REGULATION", "SET_MAXIMIZE_AUTO_CONSUMPTION")
     - `parameters`: Object containing mode-specific parameters (varies by command type)
   - `energySavingMode`: Object controlling the energy saving functionality
-    - `enabled`: String value "true" or "false" to enable/disable energy saving mode
+    - `enabled`: Boolean value `true` or `false` to enable/disable energy saving mode
     - `houseConsumptionThreshold`: Integer value between 300 and 1000 for the house consumption threshold in Watts
 
 - **Response**:
