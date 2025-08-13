@@ -880,6 +880,14 @@ These endpoints provide basic system information accessible to both customer and
 
 - **Description**: Updates device settings including energy saving mode configuration.
 - **Important**: ⚠️ **You must include ALL current settings values in the request payload, not just the parameter you want to change**. The API appears to replace all settings with the provided values. Get current values from `GET /api/settings` first, then modify only the specific parameter you want to update.
+- **Critical Data Transformation**: ⚠️ **The GET and PUT APIs use different data formats**:
+  - **GET** `/api/settings` returns: `"country": {"geonameId": "2635167", "name": "United Kingdom"}`
+  - **PUT** `/api/settings` expects: `"country": "2635167"` (string only)
+  - **Required transformations before PUT**:
+    - `country`: Extract `geonameId` from country object → string
+    - `city`: Extract `geonameId` from city object → string  
+    - `timezone`: Extract `id` from timezone object → string
+- **Tested**: ✅ **Verified working** - Complete workflow tested and confirmed functional.
 - **Request**:
 
   ```json
