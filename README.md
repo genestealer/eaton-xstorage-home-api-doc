@@ -1273,23 +1273,21 @@ These endpoints allow you to control system operation and power state.
 
 Commands control the operational mode of the xStorage Home system. Each command follows the priority hierarchy: Dashboard > Schedule > General Settings. See the [Operation Modes Reference](#operation-modes-reference) section for detailed explanations of each mode.
 
-**Common Parameters for all commands:**
-
-- `duration`: Number of hours for the command to run (integer from 1 to 12)
-
 **Available Operation Mode Commands:**
 
 | Command | Type | Parameters Required | Description |
 |---------|------|-------|-------------|
-| `SET_BASIC_MODE` | Manual | None | Basic operation mode (Unit On) |
-| `SET_CHARGE` | Manual | `power`, `soc`, `action` | Manual battery charging mode |
-| `SET_DISCHARGE` | Manual | `power`, `soc`, `action` | Manual battery discharging mode |
-| `SET_MAXIMIZE_AUTO_CONSUMPTION` | Intelligent | None | Maximize Auto-Consumption of PV energy |
-| `SET_VARIABLE_GRID_INJECTION` | Intelligent | `maximumPower` | Variable Grid Injection - control grid injection limits |
-| `SET_FREQUENCY_REGULATION` | Intelligent | `powerAllocation`, `optimalSoc` | Frequency Regulation - grid frequency stabilization services |
-| `SET_PEAK_SHAVING` | Intelligent | `maxHousePeakConsumption` | Peak Shaving - prevent peak consumption penalties |
+| `SET_BASIC_MODE` | Manual | `duration` | Basic operation mode (Unit On) |
+| `SET_CHARGE` | Manual | `duration`, `power`, `soc`, `action` | Manual battery charging mode |
+| `SET_DISCHARGE` | Manual | `duration`, `power`, `soc`, `action` | Manual battery discharging mode |
+| `SET_MAXIMIZE_AUTO_CONSUMPTION` | Intelligent | `duration` | Maximize Auto-Consumption of PV energy |
+| `SET_VARIABLE_GRID_INJECTION` | Intelligent | `duration`, `maximumPower` | Variable Grid Injection - control grid injection limits |
+| `SET_FREQUENCY_REGULATION` | Intelligent | `duration`, `powerAllocation`, `optimalSoc` | Frequency Regulation - grid frequency stabilization services |
+| `SET_PEAK_SHAVING` | Intelligent | `duration`, `maxHousePeakConsumption` | Peak Shaving - prevent peak consumption penalties |
 
-**Acronym Definitions:**
+**Parameter Definitions:**
+
+- **duration**: Number of hours for the command to run (integer from 1 to 12) - **Required for ALL commands**
 
 
 - **SOC**: State of Charge - battery charge level (0-100%)
