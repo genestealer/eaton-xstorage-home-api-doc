@@ -1400,7 +1400,7 @@ Commands control the operational mode of the xStorage Home system. Each command 
 
   - **state**: Boolean value to control power state (true = on, false = off).
 
-- **Comment**: When the device is turned off, the "powerState" field in other API responses will return false.
+- **Comment**: When the device is turned off, the "powerState" field in other API responses will return false. Important: the API returns no response body when commanding the inverter on or off (i.e., the HTTP response completes with an empty body). Because the power control request does not return a body, verify the device state after issuing the command using GET /api/device or GET /api/device/status.
 
 ---
 
