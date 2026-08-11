@@ -83,7 +83,7 @@ All API endpoints require authentication using Bearer tokens obtained from the s
 
 If you've forgotten your credentials, try the default ones:
 
-- **Customer Account**: Username: `user`, Password: `user`  
+- **Customer Account**: Username: `user`, Password: `user`
 - **Technician Account**: Username: `admin`, Password: `jlwgK41G`
 
 #### Getting a Bearer Token
@@ -95,7 +95,7 @@ curl -X POST "https://your-device-ip/api/auth/signin" \
   -H "Content-Type: application/json" \
   --data '{
     "username": "user",
-    "pwd": "user", 
+    "pwd": "user",
     "userType": "customer"
   }'
 ```
@@ -108,7 +108,7 @@ curl -X POST "https://your-device-ip/api/auth/signin" \
   --data '{
     "username": "admin",
     "pwd": "jlwgK41G",
-    "inverterSn": "REDACTED", 
+    "inverterSn": "REDACTED",
     "email": "anything@anything.com",
     "userType": "tech"
   }'
@@ -138,27 +138,27 @@ The following screenshots show the various pages and functionality of the xStora
 ### Dashboard Overview
 
 ![Dashboard 1](screenshots/Dashboard1.jpg)
-*Main dashboard showing system status and energy flow*
+_Main dashboard showing system status and energy flow_
 
 ### System Status
 
 ![Dashboard 2](screenshots/Dashboard2.jpg)
-*Detailed system status and battery information*
+_Detailed system status and battery information_
 
 ### Energy Metrics
 
 ![Dashboard 3](screenshots/Dashboard3.jpg)
-*Energy consumption and production metrics*
+_Energy consumption and production metrics_
 
 ### Device Settings
 
 ![Dashboard 4](screenshots/Dashboard4.jpg)
-*Device configuration and settings interface*
+_Device configuration and settings interface_
 
 ### Technical Information
 
 ![Dashboard 5](screenshots/Dashboard5.jpg)
-*Technical details and system diagnostics*
+_Technical details and system diagnostics_
 
 ---
 
@@ -171,7 +171,7 @@ Based on the official Eaton xStorage Home Operation Modes Manual (MN700004EN, Ap
 Operation modes follow a strict priority hierarchy:
 
 1. **Dashboard (Manual)** - Highest priority - immediate manual override
-2. **Schedule** - Medium priority - time-based scheduled events  
+2. **Schedule** - Medium priority - time-based scheduled events
 3. **General Settings** - Lowest priority - default system behavior
 
 When multiple modes are configured, the highest priority active mode takes precedence.
@@ -183,23 +183,27 @@ When multiple modes are configured, the highest priority active mode takes prece
 Manual modes provide direct control but don't contribute to energy optimization:
 
 #### Unit On (Basic Mode)
+
 - **Command**: `SET_BASIC_MODE`
 - **Purpose**: Basic system operation without intelligent optimization
 - **Operation**: System converts energy from PV panels but operates in simple mode
 - **Use Case**: Manual control when you want predictable, non-automated behavior
 
 #### Unit Off (Standby)
-- **Control**: Via `/api/device/power` endpoint  
+
+- **Control**: Via `/api/device/power` endpoint
 - **Purpose**: Power down the system completely
 - **Operation**: System enters standby mode with minimal power consumption
 
 #### Manual Charge
+
 - **Command**: `SET_CHARGE`
 - **Purpose**: Force battery charging regardless of other conditions
 - **Operation**: Battery charges from available PV or grid power
 - **Use Case**: Prepare for expected power outage or peak rate periods
 
-#### Manual Discharge  
+#### Manual Discharge
+
 - **Command**: `SET_DISCHARGE`
 - **Purpose**: Force battery discharge to power loads or export to grid
 - **Operation**: Battery discharges at specified power level until target SOC reached
@@ -212,15 +216,18 @@ Manual modes provide direct control but don't contribute to energy optimization:
 Intelligent modes maximize solar energy usage and enable cost savings through autonomous operation:
 
 #### 1. Maximize Auto-Consumption (MAC)
+
 - **Command**: `SET_MAXIMIZE_AUTO_CONSUMPTION`
 - **Purpose**: Maximize utilization of PV-generated energy and minimize grid consumption
 
 **How it Works:**
+
 - Charges battery from excess PV energy during the day
-- Discharges battery to power loads when PV is insufficient  
+- Discharges battery to power loads when PV is insufficient
 - Stores energy for evening use when electricity prices are higher
 
 **Requirements:**
+
 - **AC Coupled**: Both power meters required for full optimization
 - **DC Coupled**: Power Meter 1 required with separated critical/non-critical loads
 - **NO-PV**: Not applicable
@@ -228,16 +235,19 @@ Intelligent modes maximize solar energy usage and enable cost savings through au
 **Best For**: Installations with PV panels where the goal is energy self-sufficiency
 
 #### 2. Peak Shaving
+
 - **Command**: `SET_PEAK_SHAVING`
 - **Purpose**: Avoid penalty charges by preventing household consumption from exceeding contracted maximum peak power
 
 **Parameters:**
+
 - `maxHousePeakConsumption`: Maximum allowed household power (Watts)
 
 **How it Works:**
+
 - Continuously monitors total household consumption
 - Automatically discharges battery when consumption exceeds threshold
-- Stops discharging when consumption falls below threshold  
+- Stops discharging when consumption falls below threshold
 - Can be combined with scheduled charging during low-tariff periods
 
 **Requirements:** Power Meter 1 must be installed for all installation types
@@ -245,15 +255,18 @@ Intelligent modes maximize solar energy usage and enable cost savings through au
 **Best For**: Households with utility contracts that penalize peak consumption above contracted limits
 
 #### 3. Variable Grid Injection
-- **Command**: `SET_VARIABLE_GRID_INJECTION`  
+
+- **Command**: `SET_VARIABLE_GRID_INJECTION`
 - **Purpose**: Control the amount of surplus PV energy injected back into the grid
 
 **Parameters:**
+
 - `maximumPower`: Grid injection limit (-1000W to +3000W)
   - **Positive values**: Maximum power injection to grid
   - **Negative values**: Minimum power consumption from grid
 
 **How it Works:**
+
 - Powers loads with PV energy first
 - Charges battery with surplus PV energy
 - Limits grid injection to specified maximum when battery is full
@@ -264,20 +277,24 @@ Intelligent modes maximize solar energy usage and enable cost savings through au
 **Best For**: Areas where utilities penalize or limit grid injection of surplus solar energy
 
 #### 4. Frequency Regulation
+
 - **Command**: `SET_FREQUENCY_REGULATION`
 - **Purpose**: Provide grid frequency stabilization services to utilities or aggregators
 
 **Parameters:**
+
 - `powerAllocation`: Power available for grid regulation (Watts)
 - `optimalSoc`: Target State of Charge for optimal regulation capacity (0-100%)
 
 **How it Works:**
+
 - Injects power to grid when frequency drops (e.g., below 50Hz in Europe)
-- Absorbs power from grid when frequency rises (e.g., above 50Hz in Europe)  
+- Absorbs power from grid when frequency rises (e.g., above 50Hz in Europe)
 - Maintains optimal SOC for maximum up/down regulation capacity
 - User receives remuneration for frequency stabilization services
 
 **Requirements:**
+
 - No power meter required (system senses grid frequency automatically)
 - Critical loads cannot be connected when this mode is active
 - **Not available for 6kW hybrid inverter systems**
@@ -288,13 +305,13 @@ Intelligent modes maximize solar energy usage and enable cost savings through au
 
 ### Mode Compatibility by Installation Type
 
-| Operation Mode | AC Coupled | DC Coupled | NO-PV |
-|---|---|---|---|
-| Manual Modes | ✅ All | ✅ All | ✅ All |
-| Maximize Auto-Consumption | ✅ Both meters | ✅ Meter 1 + load separation | ❌ Not applicable |
-| Peak Shaving | ✅ Meter 1 | ✅ Meter 1 | ✅ Meter 1 |
-| Variable Grid Injection | ✅ Meter 1 | ✅ Meter 1 | ✅ Meter 1 |
-| Frequency Regulation | ✅ No specific requirements | ✅ No specific requirements | ✅ No specific requirements |
+| Operation Mode            | AC Coupled                  | DC Coupled                   | NO-PV                       |
+| ------------------------- | --------------------------- | ---------------------------- | --------------------------- |
+| Manual Modes              | ✅ All                      | ✅ All                       | ✅ All                      |
+| Maximize Auto-Consumption | ✅ Both meters              | ✅ Meter 1 + load separation | ❌ Not applicable           |
+| Peak Shaving              | ✅ Meter 1                  | ✅ Meter 1                   | ✅ Meter 1                  |
+| Variable Grid Injection   | ✅ Meter 1                  | ✅ Meter 1                   | ✅ Meter 1                  |
+| Frequency Regulation      | ✅ No specific requirements | ✅ No specific requirements  | ✅ No specific requirements |
 
 > **Note**: Some operation modes may not be available in all countries due to local installation codes and regulations.
 
@@ -320,16 +337,16 @@ The Battery Backup Level represents the minimum State of Charge (SOC) reserved f
 The xStorage Home system is available in multiple configurations, all visible in API responses:
 
 | Charging Power | Battery Capacity | Part Number Example |
-|---|---|---|
-| 3.6 kW | 4.2 kWh | XSTH1P0361UBUEV2 |
-| 4.6 kW | 4.2 kWh | XSTH1P0461UBUEV2 |
-| 6.0 kW | 4.2 kWh | XSTH1P0601UBUEV2 |
-| 3.6 kW | 6.0 kWh | XSTH1P0362NBUEV2 |
-| 4.6 kW | 6.0 kWh | XSTH1P0462NBUEV2 |
-| 6.0 kW | 6.0 kWh | XSTH1P0602NBUEV2 |
-| 3.6 kW | 10.08 kWh | XSTH1P0364NBUEV2 |
-| 4.6 kW | 10.08 kWh | XSTH1P0464NBUEV2 |
-| 6.0 kW | 10.08 kWh | XSTH1P0604NBUEV2 |
+| -------------- | ---------------- | ------------------- |
+| 3.6 kW         | 4.2 kWh          | XSTH1P0361UBUEV2    |
+| 4.6 kW         | 4.2 kWh          | XSTH1P0461UBUEV2    |
+| 6.0 kW         | 4.2 kWh          | XSTH1P0601UBUEV2    |
+| 3.6 kW         | 6.0 kWh          | XSTH1P0362NBUEV2    |
+| 4.6 kW         | 6.0 kWh          | XSTH1P0462NBUEV2    |
+| 6.0 kW         | 6.0 kWh          | XSTH1P0602NBUEV2    |
+| 3.6 kW         | 10.08 kWh        | XSTH1P0364NBUEV2    |
+| 4.6 kW         | 10.08 kWh        | XSTH1P0464NBUEV2    |
+| 6.0 kW         | 10.08 kWh        | XSTH1P0604NBUEV2    |
 
 ### Installation Types and Power Meter Requirements
 
@@ -372,6 +389,37 @@ Key BMS parameters visible in API responses:
 - **`bmsModel`**: Battery model designation (e.g., "RESIDENCIAL")
 - **`bmsState`**: Current battery state ("BAT_CHARGING", "BAT_DISCHARGING", "BAT_IDLE")
 - **`bmsAvgTemperature`**: Average battery temperature for thermal management
+- **`bmsFaultCode`**: Array of active BMS faults, or `null` when no fault is present (see below)
+
+#### BMS Fault Codes (`bmsFaultCode`)
+
+Returned by `GET /api/technical/status`. The field is `null` when the BMS reports no fault, otherwise it is an
+**array** of one or more of the strings below (the technician UI shows the count and lists them in a modal).
+
+| Value                    | Meaning                                                                     |
+| ------------------------ | --------------------------------------------------------------------------- |
+| `GENERAL`                | General BMS fault detected                                                  |
+| `UNDER_TEMPERATURE`      | Under-temperature event detected                                            |
+| `OVER_TEMPERATURE`       | Over-temperature event detected                                             |
+| `OVER_VOLTAGE`           | Over-voltage event detected                                                 |
+| `UNDER_VOLTAGE`          | Under-voltage event detected                                                |
+| `CHARGE_OVER_CURRENT`    | Charge over-current event (current exceeds 2C)                              |
+| `DISCHARGE_OVER_CURRENT` | Discharge over-current event (current exceeds 2C)                           |
+| `CURRENT_MISMATCH`       | Charger current mismatch (charge current exceeds specified Charger Current) |
+
+Example: `"bmsFaultCode": ["OVER_TEMPERATURE", "CHARGE_OVER_CURRENT"]`
+
+Source: the web UI translation bundle. The strings live in `static/js/main.<hash>.js` under the keys
+`MAINTENANCE_BMSFAULTCODE_<VALUE>`; the maintenance chunk renders each entry as
+`translations["MAINTENANCE_BMSFAULTCODE_" + value]`, so the API returns the key suffix. The same convention
+applies to `gridCode` (`MAINTENANCE_GRIDCODE_<VALUE>`), verified against a live `gridCode: "UK_G98"` response.
+
+To re-extract the list from your own unit (replace the hash with the one referenced in `/asset-manifest.json`):
+
+```bash
+curl -sk "https://<unit-host>/static/js/main.821bc3b9.js" \
+  | grep -o '"MAINTENANCE_BMSFAULTCODE_[A-Z_]*":"[^"]*"'
+```
 
 ### Operational Limits and Safety
 
@@ -517,24 +565,24 @@ DOCUMENTATION.
 
 ## Summary Table - Quick Reference
 
-| Endpoint                          | Method | Requires Technician Account | Description                       |
-|-----------------------------------|--------|-----------------------------|-----------------------------------|
-| `/api/config/state`               | GET    | No                          | Retrieves the current configuration state of the system. |
-| `/api/device`                     | GET    | No                          | Retrieves device information.     |
-| `/api/device/status`              | GET    | No                          | Retrieves the current status of the device. |
-| `/api/settings`                   | GET    | No                          | Retrieves device settings.        |
-| `/api/settings/`                  | PUT    | No                          | Updates device settings including energy saving mode. |
-| `/api/metrics`                    | GET    | No                          | Retrieves hourly metrics data.    |
-| `/api/metrics/daily`              | GET    | No                          | Retrieves daily metrics data.     |
-| `/api/schedule/`                  | GET    | No                          | Retrieves schedule information.   |
-| `/api/notifications/`             | GET    | No                          | Retrieves device notifications and alerts. |
-| `/api/notifications/unread`       | GET    | No                          | Retrieves count of unread notifications. |
-| `/api/notifications/read/all`     | POST   | No                          | Marks all notifications as read. |
-| `/api/device/command`             | POST   | No                          | Sends commands to the device.     |
-| `/api/device/power`               | POST   | No                          | Controls the power state of the device (on/off). |
-| `/api/auth/signin`                | POST   | No                          | Authenticates a user and retrieves a token. |
-| `/api/technical/status`           | GET    | Yes                         | Retrieves technical status of the device. |
-| `/api/device/maintenance/diagnostics` | GET | Yes                         | Retrieves maintenance diagnostics. |
+| Endpoint                              | Method | Requires Technician Account | Description                                              |
+| ------------------------------------- | ------ | --------------------------- | -------------------------------------------------------- |
+| `/api/config/state`                   | GET    | No                          | Retrieves the current configuration state of the system. |
+| `/api/device`                         | GET    | No                          | Retrieves device information.                            |
+| `/api/device/status`                  | GET    | No                          | Retrieves the current status of the device.              |
+| `/api/settings`                       | GET    | No                          | Retrieves device settings.                               |
+| `/api/settings/`                      | PUT    | No                          | Updates device settings including energy saving mode.    |
+| `/api/metrics`                        | GET    | No                          | Retrieves hourly metrics data.                           |
+| `/api/metrics/daily`                  | GET    | No                          | Retrieves daily metrics data.                            |
+| `/api/schedule/`                      | GET    | No                          | Retrieves schedule information.                          |
+| `/api/notifications/`                 | GET    | No                          | Retrieves device notifications and alerts.               |
+| `/api/notifications/unread`           | GET    | No                          | Retrieves count of unread notifications.                 |
+| `/api/notifications/read/all`         | POST   | No                          | Marks all notifications as read.                         |
+| `/api/device/command`                 | POST   | No                          | Sends commands to the device.                            |
+| `/api/device/power`                   | POST   | No                          | Controls the power state of the device (on/off).         |
+| `/api/auth/signin`                    | POST   | No                          | Authenticates a user and retrieves a token.              |
+| `/api/technical/status`               | GET    | Yes                         | Retrieves technical status of the device.                |
+| `/api/device/maintenance/diagnostics` | GET    | Yes                         | Retrieves maintenance diagnostics.                       |
 
 ---
 
@@ -544,13 +592,13 @@ This section documents all available API endpoints organized by category. Rememb
 
 ### Quick Reference
 
-| Category | Purpose | Requires Tech Account |
-|----------|---------|----------------------|
-| **System Information** | Device details, status, settings | No |
-| **Metrics & Data** | Historical data and metrics | No |
-| **Notifications** | Alerts and system messages | No |
-| **Device Control** | Commands and power control | No |
-| **Technical Diagnostics** | Advanced system information | Yes |
+| Category                  | Purpose                          | Requires Tech Account |
+| ------------------------- | -------------------------------- | --------------------- |
+| **System Information**    | Device details, status, settings | No                    |
+| **Metrics & Data**        | Historical data and metrics      | No                    |
+| **Notifications**         | Alerts and system messages       | No                    |
+| **Device Control**        | Commands and power control       | No                    |
+| **Technical Diagnostics** | Advanced system information      | Yes                   |
 
 ---
 
@@ -594,104 +642,103 @@ These endpoints provide basic system information accessible to both customer and
 
   ```json
   {
-      "successful": true,
-      "message": "Content Ready",
-      "result": {
+    "successful": true,
+    "message": "Content Ready",
+    "result": {
+      "id": "",
+      "updatedAt": 1752441080,
+      "createdAt": 1752441080,
+      "name": "REDACTED",
+      "description": "",
+      "address": "",
+      "country": {
+        "geonameId": "2635167",
+        "name": "United Kingdom"
+      },
+      "city": {
+        "geonameId": "REDACTED",
+        "name": "London"
+      },
+      "postalCode": "",
+      "latitude": 0,
+      "longitude": 0,
+      "firmwareVersion": "00.01.0017-0-g72006700",
+      "commCardFirmwareVersion": "",
+      "timezone": {
+        "id": "Europe/London",
+        "updatedAt": 0,
+        "createdAt": 0,
+        "timezone": "Europe/London",
+        "countryId": "",
+        "name": "Europe/London",
+        "version": ""
+      },
+      "dns": "8.8.8.8",
+      "bmsCapacity": 4.2,
+      "bmsFirmwareVersion": "4004",
+      "bmsBackupLevel": 0,
+      "bmsSerialNumber": "REDACTED",
+      "bmsModel": "RESIDENCIAL",
+      "bmsAvgTemperature": 0,
+      "inverterManufacturer": "EATON",
+      "inverterModelName": "XSTH1P036P048V01",
+      "inverterVaRating": 3600,
+      "inverterNominalVpv": 3600,
+      "inverterIsSinglePhase": true,
+      "inverterFirmwareVersion": "00.06.0069",
+      "inverterSerialNumber": "REDACTED",
+      "networkInterfaces": [
+        {
           "id": "",
-          "updatedAt": 1752441080,
-          "createdAt": 1752441080,
-          "name": "REDACTED",
-          "description": "",
-          "address": "",
-          "country": {
-              "geonameId": "2635167",
-              "name": "United Kingdom"
-          },
-          "city": {
-              "geonameId": "REDACTED",
-              "name": "London"
-          },
-          "postalCode": "",
-          "latitude": 0,
-          "longitude": 0,
-          "firmwareVersion": "00.01.0017-0-g72006700",
-          "commCardFirmwareVersion": "",
-          "timezone": {
-              "id": "Europe/London",
-              "updatedAt": 0,
-              "createdAt": 0,
-              "timezone": "Europe/London",
-              "countryId": "",
-              "name": "Europe/London",
-              "version": ""
-          },
-          "dns": "8.8.8.8",
-          "bmsCapacity": 4.2,
-          "bmsFirmwareVersion": "4004",
-          "bmsBackupLevel": 0,
-          "bmsSerialNumber": "REDACTED",
-          "bmsModel": "RESIDENCIAL",
-          "bmsAvgTemperature": 0,
-          "inverterManufacturer": "EATON",
-          "inverterModelName": "XSTH1P036P048V01",
-          "inverterVaRating": 3600,
-          "inverterNominalVpv": 3600,
-          "inverterIsSinglePhase": true,
-          "inverterFirmwareVersion": "00.06.0069",
-          "inverterSerialNumber": "REDACTED",
-          "networkInterfaces": [
-              {
-                  "id": "",
-                  "updatedAt": 0,
-                  "createdAt": 0,
-                  "name": "eth0",
-                  "macAddress": "REDACTED",
-                  "ipAddress": "REDACTED"
-              },
-              {
-                  "id": "",
-                  "updatedAt": 0,
-                  "createdAt": 0,
-                  "name": "wlan0",
-                  "macAddress": "REDACTED",
-                  "ipAddress": "REDACTED"
-              }
-          ],
-          "powerMeters": [
-              {
-                  "id": "",
-                  "updatedAt": 0,
-                  "createdAt": 0,
-                  "position": 1,
-                  "model": "None",
-                  "singlePhase": true
-              },
-              {
-                  "id": "",
-                  "updatedAt": 0,
-                  "createdAt": 0,
-                  "position": 2,
-                  "model": "None",
-                  "singlePhase": true
-              }
-          ],
-          "hasPv": false,
-          "hasBattery": true,
-          "powerState": true,
-          "connected": false,
-          "deviceLastScheduleUpdate": 1752544607,
-          "deviceLastUpdate": 1752441080,
-          "updateStatus": "",
-          "updateBlockedState": false,
-          "bundleVersion": "v1.17",
-          "localPortalRemoteId": "47221",
-          "energySavingMode": {
-              "enabled": true,
-              "houseConsumptionThreshold": 300
-          }
+          "updatedAt": 0,
+          "createdAt": 0,
+          "name": "eth0",
+          "macAddress": "REDACTED",
+          "ipAddress": "REDACTED"
+        },
+        {
+          "id": "",
+          "updatedAt": 0,
+          "createdAt": 0,
+          "name": "wlan0",
+          "macAddress": "REDACTED",
+          "ipAddress": "REDACTED"
+        }
+      ],
+      "powerMeters": [
+        {
+          "id": "",
+          "updatedAt": 0,
+          "createdAt": 0,
+          "position": 1,
+          "model": "None",
+          "singlePhase": true
+        },
+        {
+          "id": "",
+          "updatedAt": 0,
+          "createdAt": 0,
+          "position": 2,
+          "model": "None",
+          "singlePhase": true
+        }
+      ],
+      "hasPv": false,
+      "hasBattery": true,
+      "powerState": true,
+      "connected": false,
+      "deviceLastScheduleUpdate": 1752544607,
+      "deviceLastUpdate": 1752441080,
+      "updateStatus": "",
+      "updateBlockedState": false,
+      "bundleVersion": "v1.17",
+      "localPortalRemoteId": "47221",
+      "energySavingMode": {
+        "enabled": true,
+        "houseConsumptionThreshold": 300
       }
+    }
   }
-
   ```
 
 - **Comment**: Lots of good information.
@@ -705,66 +752,65 @@ These endpoints provide basic system information accessible to both customer and
 
   ```json
   {
-      "successful": true,
-      "message": "Content Ready",
-      "result": {
-          "currentMode": {
-              "id": "4c773998-fdc8-4faf-8132-847c27d10eb6",
-              "command": "SET_CHARGE",
-              "createdAt": 1752584987000,
-              "updatedAt": 1752584987000,
-              "duration": 1,
-              "startTime": 1409,
-              "endTime": 1509,
-              "recurrence": "MANUAL_EVENT",
-              "type": "MANUAL",
-              "parameters": {
-                  "action": "ACTION_CHARGE",
-                  "power": 15,
-                  "soc": 90
-              },
-              "user": {
-                  "id": "00000000-0000-0000-0000-000000000000",
-                  "firstName": "Local",
-                  "lastName": "User"
-              }
-          },
-          "energyFlow": {
-              "acPvRole": "DISCONNECTED",
-              "acPvValue": 0,
-              "batteryBackupLevel": 0,
-              "batteryStatus": "BAT_CHARGING",
-              "batteryEnergyFlow": 406,
-              "criticalLoadRole": "NONE",
-              "criticalLoadValue": 0,
-              "dcPvRole": "DISCONNECTED",
-              "dcPvValue": 0,
-              "gridRole": "NONE",
-              "gridValue": 0,
-              "nonCriticalLoadRole": "NONE",
-              "nonCriticalLoadValue": 0,
-              "operationMode": "CHARGING",
-              "selfConsumption": 0,
-              "selfSufficiency": 0,
-              "stateOfCharge": 88,
-              "energySavingModeEnabled": true,
-              "energySavingModeActivated": false
-          },
-          "last30daysEnergyFlow": {
-              "gridConsumption": 0,
-              "photovoltaicProduction": 0,
-              "selfConsumption": 0,
-              "selfSufficiency": 0
-          },
-          "today": {
-              "gridConsumption": 0,
-              "photovoltaicProduction": 0,
-              "selfConsumption": 0,
-              "selfSufficiency": 0
-          }
+    "successful": true,
+    "message": "Content Ready",
+    "result": {
+      "currentMode": {
+        "id": "4c773998-fdc8-4faf-8132-847c27d10eb6",
+        "command": "SET_CHARGE",
+        "createdAt": 1752584987000,
+        "updatedAt": 1752584987000,
+        "duration": 1,
+        "startTime": 1409,
+        "endTime": 1509,
+        "recurrence": "MANUAL_EVENT",
+        "type": "MANUAL",
+        "parameters": {
+          "action": "ACTION_CHARGE",
+          "power": 15,
+          "soc": 90
+        },
+        "user": {
+          "id": "00000000-0000-0000-0000-000000000000",
+          "firstName": "Local",
+          "lastName": "User"
+        }
+      },
+      "energyFlow": {
+        "acPvRole": "DISCONNECTED",
+        "acPvValue": 0,
+        "batteryBackupLevel": 0,
+        "batteryStatus": "BAT_CHARGING",
+        "batteryEnergyFlow": 406,
+        "criticalLoadRole": "NONE",
+        "criticalLoadValue": 0,
+        "dcPvRole": "DISCONNECTED",
+        "dcPvValue": 0,
+        "gridRole": "NONE",
+        "gridValue": 0,
+        "nonCriticalLoadRole": "NONE",
+        "nonCriticalLoadValue": 0,
+        "operationMode": "CHARGING",
+        "selfConsumption": 0,
+        "selfSufficiency": 0,
+        "stateOfCharge": 88,
+        "energySavingModeEnabled": true,
+        "energySavingModeActivated": false
+      },
+      "last30daysEnergyFlow": {
+        "gridConsumption": 0,
+        "photovoltaicProduction": 0,
+        "selfConsumption": 0,
+        "selfSufficiency": 0
+      },
+      "today": {
+        "gridConsumption": 0,
+        "photovoltaicProduction": 0,
+        "selfConsumption": 0,
+        "selfSufficiency": 0
       }
+    }
   }
-
   ```
 
 - **Comment**: Lots of good information.
@@ -778,102 +824,101 @@ These endpoints provide basic system information accessible to both customer and
 
   ```json
   {
-      "successful": true,
-      "message": "Content Ready",
-      "result": {
-          "id": "990e5920-246f-4768-b31c-121b9149108a",
-          "updatedAt": 1752441080,
-          "createdAt": 1752441080,
-          "name": "REDACTED",
-          "description": "",
-          "hasPv": false,
-          "hasBattery": true,
-          "address": "",
-          "country": {
-              "geonameId": "2635167",
-              "name": "United Kingdom"
-          },
-          "city": {
-              "geonameId": "REDACTED",
-              "name": "London"
-          },
-          "postalCode": "",
-          "latitude": 0,
-          "longitude": 0,
-          "defaultMode": {
-              "id": "8870c322-0f3d-4d7f-a701-b664da32448c",
-              "updatedAt": 1752284944,
-              "createdAt": 1752284944,
-              "user": null,
-              "command": "SET_BASIC_MODE",
-              "parameters": null
-          },
-          "firmwareVersion": "00.01.0017-0-g72006700",
-          "bmsSerialNumber": "REDACTED",
-          "commCardFirmwareVersion": "",
-          "inverterFirmwareVersion": "00.06.0069",
-          "inverterSerialNumber": "REDACTED",
-          "inverterPowerRating": 0,
-          "bmsFirmwareVersion": "4004",
-          "bmsBackupLevel": 0,
-          "timezone": {
-              "id": "Europe/London",
-              "updatedAt": 0,
-              "createdAt": 0,
-              "timezone": "Europe/London",
-              "countryId": "",
-              "name": "Europe/London",
-              "version": ""
-          },
-          "dns": "8.8.8.8",
-          "inverterIsSinglePhase": true,
-          "bmsCapacity": 4.2,
-          "networkInterfaces": [
-              {
-                  "id": "",
-                  "updatedAt": 0,
-                  "createdAt": 0,
-                  "name": "eth0",
-                  "macAddress": "REDACTED",
-                  "ipAddress": "REDACTED"
-              },
-              {
-                  "id": "",
-                  "updatedAt": 0,
-                  "createdAt": 0,
-                  "name": "wlan0",
-                  "macAddress": "REDACTED",
-                  "ipAddress": "REDACTED"
-              }
-          ],
-          "powerMeters": [
-              {
-                  "id": "",
-                  "updatedAt": 0,
-                  "createdAt": 0,
-                  "position": 1,
-                  "model": "None",
-                  "singlePhase": true
-              },
-              {
-                  "id": "",
-                  "updatedAt": 0,
-                  "createdAt": 0,
-                  "position": 2,
-                  "model": "None",
-                  "singlePhase": true
-              }
-          ],
-          "updateBlockedState": false,
-          "bundleVersion": "v1.17",
-          "localPortalRemoteId": "47221",
-          "energySavingMode": {
-              "enabled": true,
-              "houseConsumptionThreshold": 300
-          }
+    "successful": true,
+    "message": "Content Ready",
+    "result": {
+      "id": "990e5920-246f-4768-b31c-121b9149108a",
+      "updatedAt": 1752441080,
+      "createdAt": 1752441080,
+      "name": "REDACTED",
+      "description": "",
+      "hasPv": false,
+      "hasBattery": true,
+      "address": "",
+      "country": {
+        "geonameId": "2635167",
+        "name": "United Kingdom"
+      },
+      "city": {
+        "geonameId": "REDACTED",
+        "name": "London"
+      },
+      "postalCode": "",
+      "latitude": 0,
+      "longitude": 0,
+      "defaultMode": {
+        "id": "8870c322-0f3d-4d7f-a701-b664da32448c",
+        "updatedAt": 1752284944,
+        "createdAt": 1752284944,
+        "user": null,
+        "command": "SET_BASIC_MODE",
+        "parameters": null
+      },
+      "firmwareVersion": "00.01.0017-0-g72006700",
+      "bmsSerialNumber": "REDACTED",
+      "commCardFirmwareVersion": "",
+      "inverterFirmwareVersion": "00.06.0069",
+      "inverterSerialNumber": "REDACTED",
+      "inverterPowerRating": 0,
+      "bmsFirmwareVersion": "4004",
+      "bmsBackupLevel": 0,
+      "timezone": {
+        "id": "Europe/London",
+        "updatedAt": 0,
+        "createdAt": 0,
+        "timezone": "Europe/London",
+        "countryId": "",
+        "name": "Europe/London",
+        "version": ""
+      },
+      "dns": "8.8.8.8",
+      "inverterIsSinglePhase": true,
+      "bmsCapacity": 4.2,
+      "networkInterfaces": [
+        {
+          "id": "",
+          "updatedAt": 0,
+          "createdAt": 0,
+          "name": "eth0",
+          "macAddress": "REDACTED",
+          "ipAddress": "REDACTED"
+        },
+        {
+          "id": "",
+          "updatedAt": 0,
+          "createdAt": 0,
+          "name": "wlan0",
+          "macAddress": "REDACTED",
+          "ipAddress": "REDACTED"
+        }
+      ],
+      "powerMeters": [
+        {
+          "id": "",
+          "updatedAt": 0,
+          "createdAt": 0,
+          "position": 1,
+          "model": "None",
+          "singlePhase": true
+        },
+        {
+          "id": "",
+          "updatedAt": 0,
+          "createdAt": 0,
+          "position": 2,
+          "model": "None",
+          "singlePhase": true
+        }
+      ],
+      "updateBlockedState": false,
+      "bundleVersion": "v1.17",
+      "localPortalRemoteId": "47221",
+      "energySavingMode": {
+        "enabled": true,
+        "houseConsumptionThreshold": 300
       }
+    }
   }
-
   ```
 
 #### `PUT /api/settings/`
@@ -885,7 +930,7 @@ These endpoints provide basic system information accessible to both customer and
   - **PUT** `/api/settings` expects: `"country": "2635167"` (string only)
   - **Required transformations before PUT**:
     - `country`: Extract `geonameId` from country object → string
-    - `city`: Extract `geonameId` from city object → string  
+    - `city`: Extract `geonameId` from city object → string
     - `timezone`: Extract `id` from timezone object → string
 - **Tested**: ✅ **Verified working** - Complete workflow tested and confirmed functional.
 - **Request**:
@@ -1076,7 +1121,7 @@ These endpoints provide basic system information accessible to both customer and
 
 **Real Example** (based on actual API call):
 
-```bash
+````bash
 # 1. First get current settings
 curl "https://your-device-ip/api/settings" -H "Authorization: Bearer YOUR_TOKEN"
 
@@ -1088,7 +1133,7 @@ curl "https://your-device-ip/api/settings/" \
   --data '{
     "settings": {
       "name": "REDACTED",
-      "country": "2635167", 
+      "country": "2635167",
       "timezone": "Europe/London",
       "city": "REDACTED",
       "postalCode": "",
@@ -1122,40 +1167,88 @@ These endpoints provide access to historical data and system metrics.
 
 #### Get Hourly Metrics
 
-**`GET /api/metrics`**
+**`GET /api/metrics/`**
 
-- **Description**: Retrieves hourly metrics data.
+- **Description**: Retrieves 5-minute interval metrics for the current day.
+- **Required query parameters**: `from` and `to` (Unix epoch **milliseconds**). Omitting them returns `400 Bad Request`.
+- **Example**: `GET /api/metrics/?from=1786372800000&to=1786459200000`
 - **Response**:
 
   ```json
   {
-    "metrics": [
-      { "batteryStateOfCharge": 6, "time": 1752534000000 },
-      { "batteryStateOfCharge": 7, "time": 1752534300000 }
-    ],
-    "total": { "batteryStateOfCharge": 52 }
+    "successful": true,
+    "message": "Content Ready",
+    "result": {
+      "metrics": [
+        {
+          "totalHouseConsumption": 3016.8132,
+          "totalGridInjection": 0,
+          "criticalLoads": 0,
+          "nonCriticalLoads": 953.07324,
+          "photovoltaicProduction": 0,
+          "batteryStateOfCharge": 85,
+          "selfConsumption": 0,
+          "selfSufficiency": 0,
+          "time": 1786372500000,
+          "month": "",
+          "year": "",
+          "week": ""
+        }
+      ]
+    }
   }
   ```
 
-- **Comment**: Day metrics (shows data by the hour).
+- **Comment**: All values are Wh except `batteryStateOfCharge` (%) and `time` (ms epoch). Chart labels: `today` filter maps here.
 
 #### Get Daily Metrics
 
 **`GET /api/metrics/daily`**
 
-- **Description**: Retrieves daily metrics data.
-- **Response**:
+- **Description**: Retrieves daily (per-day) metrics for the last 7 days. Requires `from`/`to` epoch milliseconds.
+- **Comment**: Chart `last-7` filter maps here.
 
-  ```json
-  {
-    "metrics": [
-      { "batteryStateOfCharge": 64, "time": 1752447600000 }
-    ],
-    "total": { "batteryStateOfCharge": 64 }
-  }
+#### Get Weekly Metrics
+
+**`GET /api/metrics/weekly`**
+
+- **Description**: Retrieves weekly (per-week) metrics for the last 30 days. Requires `from`/`to` epoch milliseconds.
+- **Comment**: Chart `last-30` filter maps here.
+
+#### Export Metrics CSV
+
+**`GET /api/metrics/export`** — 5-minute granularity
+
+**`GET /api/metrics/export/{frequency}`** — `frequency` = `daily` | `weekly`
+
+- **Description**: Downloads a CSV of selected metrics between two dates.
+- **Required query parameters**:
+  - `from` — start time, Unix epoch milliseconds
+  - `to` — end time, Unix epoch milliseconds
+  - `field` — comma-separated field list; **must start with `DATE`**
+- **Valid `field` values**:
+
+  | Field | Description |
+  | --- | --- |
+  | `DATE` | Timestamp (always first) |
+  | `TOTAL_HOUSE_CONSUMPTION` | Total household consumption |
+  | `CRITICAL_LOADS` | Critical load consumption |
+  | `NON_CRITICAL_LOADS` | Non-critical load consumption |
+  | `PHOTOVOLTAIC_PRODUCTION_AGG` | PV production aggregate |
+  | `BATTERY_STATE_OF_CHARGE` | Battery SoC (%) |
+  | `SELF_CONSUMPTION` | Self-consumption |
+  | `SELF_SUFFICIENCY` | Self-sufficiency |
+  | `GRID_INJECTION` | Grid injection |
+  | `BATTERY_TEMPERATURE` | Battery temperature |
+
+- **Example**:
+
+  ```bash
+  curl "https://your-device-ip/api/metrics/export?from=1786372800000&to=1786459200000&field=DATE,BATTERY_STATE_OF_CHARGE,TOTAL_HOUSE_CONSUMPTION" \
+    -H "Authorization: Bearer YOUR_TOKEN"
   ```
 
-- **Comment**: Week metrics (shows data by the day).
+- **Comment**: When `PHOTOVOLTAIC_PRODUCTION_AGG` is included, the API also injects `PHOTOVOLTAIC_PRODUCTION_METER_1` and `PHOTOVOLTAIC_PRODUCTION_METER_2` into the CSV.
 
 ---
 
@@ -1231,11 +1324,11 @@ These endpoints manage system notifications and alerts.
   }
   ```
 
-- **Comment**: Returns notifications and alerts with severity levels (INFO, CRITICAL) and battery-related subtypes. Supports pagination and filtering.
+- **Comment**: Accessible to both customer and technician accounts. Supports pagination and filtering.
 
 #### `GET /api/notifications/unread`
 
-- **Description**: Retrieves count of unread notifications.
+- **Description**: Retrieves count of **unread** notifications.
 - **Query Parameters**:
   - **status**: Filter by notification status (e.g., "NORMAL")
 
@@ -1251,7 +1344,7 @@ These endpoints manage system notifications and alerts.
   }
   ```
 
-- **Comment**: Returns the total count of unread notifications. Useful for displaying notification badges or counts in the UI.
+- **Comment**: Returns read/unread count only — **not** a fault indicator. An active fault alert may have `"status": "READ"` and still report `total: 0` here.
 
 #### `POST /api/notifications/read/all`
 
@@ -1267,7 +1360,141 @@ These endpoints manage system notifications and alerts.
   }
   ```
 
-- **Comment**: Simple endpoint to mark all notifications as read. Returns a success confirmation message.
+- **Comment**: Marks all as read. Does not resolve or clear faults.
+
+---
+
+### Alert Lifecycle and Fault Detection
+
+Notifications use a **raise/resolve pair model**. This is the only way a customer-level account can detect an active fault — `bmsFaultCode` requires technician access.
+
+**Lifecycle:**
+
+1. A fault is raised as a `CRITICAL` alert with `previousAlertId: ""`.
+2. When the fault clears, a new `INFO` alert is created with `previousAlertId` pointing back to the original `CRITICAL` alert's `alertId`. The UI shows this with the message *"The event is resolved."*
+3. A `CRITICAL` alert that has **no** `INFO` record referencing its `alertId` in `previousAlertId` is **still active**.
+
+**Algorithm to find active faults (no tech access required):**
+
+```bash
+# Fetch all notifications
+curl "https://your-device-ip/api/notifications/?status=NORMAL&size=100&offset=0" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+Then identify unresolved CRITICAL alerts:
+- Collect all `previousAlertId` values from `INFO` records.
+- Any `CRITICAL` record whose `alertId` does **not** appear in that set is an active fault.
+
+**Example: current live fault on test unit**
+
+| Field | Value |
+| --- | --- |
+| `subType` | `BATTERY_VOLTAGE_HIGH` |
+| `level` | `CRITICAL` |
+| `previousAlertId` | `""` (no resolution record exists) |
+| `createdAt` | `1786417660000` (2026-08-11 03:07:40Z) |
+| Technician view | `bmsFaultCode: ["OVER_VOLTAGE"]` |
+
+The customer `subType` value `BATTERY_VOLTAGE_HIGH` maps to the technician `bmsFaultCode` value `OVER_VOLTAGE`.
+
+**Correlation between `subType` (customer) and `bmsFaultCode` (technician):**
+
+| Alert `subType` | BMS fault code equivalent |
+| --- | --- |
+| `BATTERY_VOLTAGE_HIGH` | `OVER_VOLTAGE` |
+| `BATTERY_VOLTAGE_LOW` | `UNDER_VOLTAGE` |
+| `BATTERY_OVER_TEMP` | `OVER_TEMPERATURE` |
+| `BATTERY_UNDER_TEMP` | `UNDER_TEMPERATURE` |
+| `BMS_FAULT` | `GENERAL` |
+| Other subtypes | Inverter/system faults (no direct `bmsFaultCode` equivalent) |
+
+---
+
+### Notification `subType` Reference
+
+All 51 alert types, sourced from the device web UI translation bundle. `subType` appears in every notification record from `GET /api/notifications/`.
+
+#### Battery Faults
+
+| `subType` | Title | Action |
+| --- | --- | --- |
+| `BATTERY_VOLTAGE_HIGH` | The battery voltage is abnormal. | Restart inverter; contact service if fault persists. |
+| `BATTERY_VOLTAGE_LOW` | The battery voltage is abnormal. | Restart inverter; contact service if fault persists. |
+| `BATTERY_OVER_TEMP` | Battery temperature is too high. | Restart inverter; contact service if fault persists. |
+| `BATTERY_UNDER_TEMP` | Battery temperature is too low. | Restart inverter; contact service if fault persists. |
+| `BMS_FAULT` | General BMS fault detected. | Restart inverter; contact service if fault persists. |
+| `BMS_DEEP_UV` | Battery deep under-voltage | Contact service representative. |
+| `BMS_VOLT_SENSOR_FAIL` | Battery voltage sensor failure | Restart battery; contact service if fault persists. |
+| `BMS_TEMP_SENSOR_FAIL` | Battery temperature sensor failure | Restart battery; contact service if fault persists. |
+| `BMS_CONTACTOR_DISCONNECTED` | The battery contactor appears disconnected | Restart battery; contact service if fault persists. |
+| `BMS_CONTACTOR_WELDED` | The battery contactor appears welded | Restart battery; contact service if fault persists. |
+| `BMS_FUSE_BLOWN` | The battery fuse has ruptured | Restart battery; contact service if fault persists. |
+| `BMS_WRONG_PRODUCT_TYPE` | The battery product ID is incorrect | Contact service representative. |
+| `BMS_EXT_COMMS_FAIL` | The battery can not communicate with the inverter | Restart system; contact service if fault persists. |
+| `BMS_INT_COMMS_FAIL` | The battery has an internal communication failure | Restart battery; contact service if fault persists. |
+| `NO_BATTERY` | Battery communication or connection is lost. | Restart inverter if connection persists. |
+
+#### Inverter Faults
+
+| `subType` | Title | Action |
+| --- | --- | --- |
+| `DEVICE_FAULT` | Inverter device abnormal or output short circuit. | Restart inverter; contact service if unresolvable. |
+| `INVERTER_CURR_FAIL` | Inverter current is over the tolerable value. | Restart inverter; contact service if fault persists. |
+| `RELAY_FAIL` | The relay inside the Inverter is malfunctioned. | Restart inverter; contact service if unresolvable. |
+| `OVER_LOAD` | Please decrease critical load connection. | Restart inverter; contact service if fault persists. |
+| `OVER_POWER` | The power on grid terminal or Inverter terminal is exceeded. | Restart inverter; contact service if unresolvable. |
+| `TEMPERATURE_FAIL` | The ambient temperature of the inverter is too high. If necessary improve the ventilation of the inverter. | Contact service if error shows below 40°C ambient. |
+| `FAN_LOCK` | The fan is locked | Restart inverter; contact service if fault persists. |
+| `BUS_FAIL` | The internal bus voltage is abnormal. | Restart inverter; contact service if fault persists. |
+| `BUS_HIGH_FAIL` | The internal bus voltage is abnormal. | Restart inverter; contact service if fault persists. |
+| `BUS_LOW_FAIL` | The internal bus voltage is abnormal. | Restart inverter; contact service if fault persists. |
+| `BUS_START_FAIL` | Time limit of DC BUS softstart exceeded. | Restart inverter; contact service if fault persists. |
+| `RCMU_DEVICE_FAIL` | Internal module is found abnormal. | Restart inverter; contact service if fault persists. |
+| `RCMU_CURR_FAIL` | Leakage current at AC output is too high. | Contact supplier for service if unresolvable. |
+| `DC_SENSOR_FAULT` | The DC output sensor is abnormal. | Restart inverter; contact service if unresolvable. |
+| `REF_VOLTAGE_FAULT` | The reference voltage of microprocessor is found abnormal. | Restart inverter; contact service if fault persists. |
+| `EEPROM_FAIL` | Memory error was detected. | Restart inverter; contact service if fault persists. |
+| `MASTER_SLAVE_FAIL` | A communication problem was detected within the Inverter. | Restart inverter; contact service if unresolvable. |
+| `M_S_VERSION_FAIL` | Master and Slave firmware versions mismatch. | Restart inverter; contact service if unresolvable. |
+| `OFFSET_IAC_FAIL` | The Inverter detects high DC component in the AC output current. | Disconnect AC grid, wait 1 minute, restart inverter. |
+| `EMERGENCY_OFF` | Emergency power off is set. | Contact service if EPO persists. |
+| `FILESYSTEM_FAULT` | The device filesystem is failing. | Restart inverter; contact service if fault persists. |
+
+#### Grid / AC Faults
+
+| `subType` | Title | Action |
+| --- | --- | --- |
+| `NO_UTILITY` | AC grid is not available. | Check AC breaker; contact service if grid present but fault persists. |
+| `GRID_VAC_FAIL` | AC grid has one of the following conditions: over/under voltage. | Contact installer; check AC grid is normal. |
+| `GRID_FAC_FAIL` | AC grid has one of the following conditions: over/under frequency. | Contact installer; check AC grid is normal. |
+| `ENS_GFCI_FAIL` | There is big gap between Master and Slave for GFCI current detection. | Restart inverter; contact service if unresolvable. |
+| `ENS_FAC_FAIL` | There is big gap between Master and Slave for grid frequency detection. | Restart inverter; contact service if unresolvable. |
+| `ENS_VAC_FAIL` | There is big gap between Master and Slave for grid voltage detection. | Restart inverter; contact service if unresolvable. |
+| `ENS_IAC_FAIL` | There is big gap between Master and Slave for grid current detection. | Restart inverter; contact service if unresolvable. |
+| `TEST_FAIL` | Only for Italy grid code requirement. | Restart inverter; contact service if unresolvable. |
+
+#### PV / DC Faults
+
+| `subType` | Title | Action |
+| --- | --- | --- |
+| `PV_OVER_POWER` | The DC Power fed from PV arrays is too high. | Verify PV array meets manual specification. |
+| `VPV_MAX_FAIL` | The DC voltage fed from PV arrays is too high. | Verify PV string meets unit specification. |
+| `ZPV_PE_FAIL` | The insulation to ground for PV DC input is poor and might result in leakage current. | Contact installer; check PV(+)/PV(−) to ground impedance per manual. |
+
+#### Firmware / Software Faults
+
+| `subType` | Title | Action |
+| --- | --- | --- |
+| `BMS_FW_UPDATE_FAIL` | The device failed to update its BMS firmware version. | Restart inverter; contact service if fault persists. |
+| `INVERTER_FW_UPDATE_FAIL` | The device failed to update its inverter firmware version. | Restart inverter; contact service if fault persists. |
+| `APP_UPDATE_FAIL` | The device failed to update its software version. | Restart inverter; contact service if fault persists. |
+
+#### Other
+
+| `subType` | Title | Action |
+| --- | --- | --- |
+| `UNKNOWN_FAULT` | An unknown error has been detected. | Contact service if error persists. |
 
 ---
 
@@ -1283,20 +1510,19 @@ Commands control the operational mode of the xStorage Home system. Each command 
 
 **Available Operation Mode Commands:**
 
-| Command | Type | Parameters Required | Description |
-|---------|------|-------|-------------|
-| `SET_BASIC_MODE` | Manual | `duration` | Basic operation mode (Unit On) |
-| `SET_CHARGE` | Manual | `duration`, `power`, `soc`, `action` | Manual battery charging mode |
-| `SET_DISCHARGE` | Manual | `duration`, `power`, `soc`, `action` | Manual battery discharging mode |
-| `SET_MAXIMIZE_AUTO_CONSUMPTION` | Intelligent | `duration` | Maximize Auto-Consumption of PV energy |
-| `SET_VARIABLE_GRID_INJECTION` | Intelligent | `duration`, `maximumPower` | Variable Grid Injection - control grid injection limits |
-| `SET_FREQUENCY_REGULATION` | Intelligent | `duration`, `powerAllocation`, `optimalSoc` | Frequency Regulation - grid frequency stabilization services |
-| `SET_PEAK_SHAVING` | Intelligent | `duration`, `maxHousePeakConsumption` | Peak Shaving - prevent peak consumption penalties |
+| Command                         | Type        | Parameters Required                         | Description                                                  |
+| ------------------------------- | ----------- | ------------------------------------------- | ------------------------------------------------------------ |
+| `SET_BASIC_MODE`                | Manual      | `duration`                                  | Basic operation mode (Unit On)                               |
+| `SET_CHARGE`                    | Manual      | `duration`, `power`, `soc`, `action`        | Manual battery charging mode                                 |
+| `SET_DISCHARGE`                 | Manual      | `duration`, `power`, `soc`, `action`        | Manual battery discharging mode                              |
+| `SET_MAXIMIZE_AUTO_CONSUMPTION` | Intelligent | `duration`                                  | Maximize Auto-Consumption of PV energy                       |
+| `SET_VARIABLE_GRID_INJECTION`   | Intelligent | `duration`, `maximumPower`                  | Variable Grid Injection - control grid injection limits      |
+| `SET_FREQUENCY_REGULATION`      | Intelligent | `duration`, `powerAllocation`, `optimalSoc` | Frequency Regulation - grid frequency stabilization services |
+| `SET_PEAK_SHAVING`              | Intelligent | `duration`, `maxHousePeakConsumption`       | Peak Shaving - prevent peak consumption penalties            |
 
 **Parameter Definitions:**
 
 - **duration**: Number of hours for the command to run (integer from 1 to 12) - **Required for ALL commands**
-
 
 - **SOC**: State of Charge - battery charge level (0-100%)
 
@@ -1310,31 +1536,39 @@ Commands control the operational mode of the xStorage Home system. Each command 
   { "command": "SET_BASIC_MODE", "duration": 2, "parameters": null }
   ```
 
-  *Brings the system into basic mode where it can convert energy from PV panels but operates without intelligent optimization.*
+  _Brings the system into basic mode where it can convert energy from PV panels but operates without intelligent optimization._
 
 - **SET_CHARGE**: Sets the device to manual charge mode
 
   ```json
-  { "command": "SET_CHARGE", "duration": 2, "parameters": { "power": 10, "soc": 90, "action": "ACTION_CHARGE" } }
+  {
+    "command": "SET_CHARGE",
+    "duration": 2,
+    "parameters": { "power": 10, "soc": 90, "action": "ACTION_CHARGE" }
+  }
   ```
 
   - **Power**: Integer value between 5–100% (charging power percentage)
   - **SOC**: Target State of Charge (0–100%) in 1% steps; UI only allows steps of 5%
   - **Action**: Must be "ACTION_CHARGE" for charging mode
 
-  *Forces the battery to charge, either from PV or grid depending on availability.*
+  _Forces the battery to charge, either from PV or grid depending on availability._
 
 - **SET_DISCHARGE**: Sets the device to manual discharge mode
 
   ```json
-  { "command": "SET_DISCHARGE", "duration": 2, "parameters": { "power": 5, "soc": 10, "action": "ACTION_DISCHARGE" } }
+  {
+    "command": "SET_DISCHARGE",
+    "duration": 2,
+    "parameters": { "power": 5, "soc": 10, "action": "ACTION_DISCHARGE" }
+  }
   ```
 
   - **Power**: Integer value between 5–100% (discharge power percentage)
   - **SOC**: Target State of Charge (0–100%) in 1% steps; UI only allows steps of 5%
   - **Action**: Must be "ACTION_DISCHARGE" for discharge mode
 
-  *Forces the battery to discharge to power loads or inject power to grid.*
+  _Forces the battery to discharge to power loads or inject power to grid._
 
 ---
 
@@ -1343,43 +1577,59 @@ Commands control the operational mode of the xStorage Home system. Each command 
 - **SET_MAXIMIZE_AUTO_CONSUMPTION**: Maximize Auto-Consumption (MAC) mode
 
   ```json
-  { "command": "SET_MAXIMIZE_AUTO_CONSUMPTION", "duration": 2, "parameters": null }
+  {
+    "command": "SET_MAXIMIZE_AUTO_CONSUMPTION",
+    "duration": 2,
+    "parameters": null
+  }
   ```
 
-  *Optimizes PV energy usage by charging battery with excess solar energy and discharging when PV is insufficient. Requires proper power meter configuration for full optimization.*
+  _Optimizes PV energy usage by charging battery with excess solar energy and discharging when PV is insufficient. Requires proper power meter configuration for full optimization._
 
 - **SET_VARIABLE_GRID_INJECTION**: Variable grid injection mode
 
   ```json
-  { "command": "SET_VARIABLE_GRID_INJECTION", "duration": 2, "parameters": { "maximumPower": 0 } }
+  {
+    "command": "SET_VARIABLE_GRID_INJECTION",
+    "duration": 2,
+    "parameters": { "maximumPower": 0 }
+  }
   ```
 
   - **maximumPower**: Grid injection limit in Watts (-1000 to +3000)
     - Positive: Maximum power injection to grid
     - Negative: Minimum power consumption from grid
 
-  *Controls surplus PV energy injection to prevent utility penalties. Powers loads first, charges battery second, then limits grid injection to specified maximum.*
+  _Controls surplus PV energy injection to prevent utility penalties. Powers loads first, charges battery second, then limits grid injection to specified maximum._
 
 - **SET_FREQUENCY_REGULATION**: Frequency regulation mode for grid stabilization
 
   ```json
-  { "command": "SET_FREQUENCY_REGULATION", "duration": 2, "parameters": { "powerAllocation": 0, "optimalSoc": 0 } }
+  {
+    "command": "SET_FREQUENCY_REGULATION",
+    "duration": 2,
+    "parameters": { "powerAllocation": 0, "optimalSoc": 0 }
+  }
   ```
 
   - **powerAllocation**: Power available for grid regulation in Watts
   - **optimalSoc**: Target State of Charge for optimal regulation capacity (0-100%)
 
-  *Provides grid frequency stabilization services. Injects/absorbs power based on grid frequency. Requires commercial arrangement with utility/aggregator. Not available for 6kW inverters.*
+  _Provides grid frequency stabilization services. Injects/absorbs power based on grid frequency. Requires commercial arrangement with utility/aggregator. Not available for 6kW inverters._
 
 - **SET_PEAK_SHAVING**: Peak shaving mode
 
   ```json
-  { "command": "SET_PEAK_SHAVING", "duration": 2, "parameters": { "maxHousePeakConsumption": 0 } }
+  {
+    "command": "SET_PEAK_SHAVING",
+    "duration": 2,
+    "parameters": { "maxHousePeakConsumption": 0 }
+  }
   ```
 
   - **maxHousePeakConsumption**: Maximum allowed household consumption in Watts
 
-  *Prevents household consumption from exceeding contracted peak power limits. Automatically discharges battery when consumption threshold is exceeded to avoid utility penalties.*
+  _Prevents household consumption from exceeding contracted peak power limits. Automatically discharges battery when consumption threshold is exceeded to avoid utility penalties._
 
 ---
 
@@ -1460,6 +1710,7 @@ These endpoints require technician-level authentication and provide advanced sys
   ```
 
 - **Comment**: Returns technical status including grid, inverter, and battery metrics.
+- **`bmsFaultCode`**: `null` when healthy, otherwise an array of fault strings; see [BMS Fault Codes](#bms-fault-codes-bmsfaultcode).
 
 #### `GET /api/device/maintenance/diagnostics`
 
