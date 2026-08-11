@@ -1153,6 +1153,8 @@ curl "https://your-device-ip/api/settings/" \
     }
   }'
 
+````
+
 This example shows:
 
 - **Battery Backup Level**: Set to 19% (reserves ~0.8 kWh for emergency backup on a 4.2 kWh system)
