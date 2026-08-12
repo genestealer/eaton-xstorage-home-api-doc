@@ -445,7 +445,7 @@ curl -sk "https://<unit-host>/static/js/main.821bc3b9.js" \
 
 Understanding energy flow terms in API responses:
 
-- **`gridRole`**: Direction of grid power flow ("NONE", "SUPPLYING", "CONSUMING")
+- **`gridRole`**: Direction of grid power flow ("NONE", "PRODUCER" = exporting to grid, "CONSUMER" = importing from grid). Some docs/UI strings reference "SUPPLYING"/"CONSUMING" but live units report `PRODUCER`/`CONSUMER`.
 - **`batteryEnergyFlow`**: Positive = discharging, Negative = charging
 - **`operationMode`**: Current system operation ("CHARGING", "DISCHARGING", "IDLE")
 - **`selfConsumption`**: Percentage of generated energy used directly
@@ -1201,7 +1201,7 @@ These endpoints provide access to historical data and system metrics.
   }
   ```
 
-- **Comment**: All values are Wh except `batteryStateOfCharge` (%) and `time` (ms epoch). Chart labels: `today` filter maps here.
+- **Comment**: All values are instantaneous **Watts (W)**, not Wh — each record is a power sample (averaged over the 5-minute interval), not accumulated energy. To derive energy, integrate over time (e.g. `average_W * hours / 1000` for kWh) rather than summing raw values. Exception: `batteryStateOfCharge` (%) and `time` (ms epoch). Chart labels: `today` filter maps here.
 
 #### Get Daily Metrics
 

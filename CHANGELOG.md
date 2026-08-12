@@ -7,6 +7,15 @@ Dates reflect when the work was done, not necessarily when it was committed.
 
 ---
 
+## 2026-08-12
+
+### Fixed
+
+- **`/api/metrics/` unit corrected**: values are instantaneous **Watts (W)**, not Wh. Confirmed by a user report — summing 250 raw samples (averaging 574.75) yielded 143.7 kWh against an actual ~13.7 kWh day, a ~10.5x discrepancy consistent with treating power samples as energy.
+- **`gridRole` enum corrected**: live devices report `"PRODUCER"`/`"CONSUMER"`, not `"SUPPLYING"`/`"CONSUMING"` as previously documented.
+
+---
+
 ## 2026-08-11
 
 Work completed in this session; not yet committed.
