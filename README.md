@@ -17,6 +17,7 @@ This repository documents discovered API endpoints from an Eaton xStorage Home s
 - [Technical System Information](#technical-system-information)
 - [API Endpoints](#api-endpoints)
 - [Data Export and Monitoring](#data-export-and-monitoring-alternatives)
+- [Observed API Behaviour Notes](#observed-api-behaviour-notes)
 - [License & Legal](#license--legal)
 
 ---
@@ -446,8 +447,9 @@ curl -sk "https://<unit-host>/static/js/main.821bc3b9.js" \
 Understanding energy flow terms in API responses:
 
 - **`gridRole`**: Direction of grid power flow ("NONE", "PRODUCER" = exporting to grid, "CONSUMER" = importing from grid). Some docs/UI strings reference "SUPPLYING"/"CONSUMING" but live units report `PRODUCER`/`CONSUMER`.
+- **`nonCriticalLoadRole`**: Same NONE/PRODUCER/CONSUMER convention as `gridRole`, applied to the non-critical load leg; live units report `CONSUMER` rather than the documented `SUPPLYING`/`CONSUMING`.
 - **`batteryEnergyFlow`**: Positive = discharging, Negative = charging
-- **`operationMode`**: Current system operation ("CHARGING", "DISCHARGING", "IDLE")
+- **`operationMode`**: Current system operation (documented as "CHARGING", "DISCHARGING", "IDLE"; a unit running its default mode has also been observed reporting `"BASIC"`, which is not in the documented set — see [Observed API Behaviour Notes](#observed-api-behaviour-notes))
 - **`selfConsumption`**: Percentage of generated energy used directly
 - **`selfSufficiency`**: Percentage of energy needs met by local generation
 
@@ -517,6 +519,94 @@ If you can't access your system:
 
 - **Customer Account**: Username: `user`, Password: `user`
 - **Technician Account**: Username: `admin`, Password: `jlwgK41G`
+
+---
+
+## Observed API Behaviour Notes
+
+Recorded on 2026-08-12/16 by probing a live 3.6 kW inverter (firmware `00.01.0017-0-g72006700`, bundle `v1.17`), because these behaviours are not covered by the endpoint reference above. Credit: [home_assistant_eaton_battery_storage_improved](https://github.com/genestealer/home_assistant_eaton_battery_storage_improved/blob/develop/docs/device-api-behaviour.md), which probes this same API from a Home Assistant integration. Behaviour may differ on the 4.6 kW / 6 kW models or on units left on an older bundle version — add findings from other models rather than replacing these.
+
+### Write endpoints answer in three different shapes
+
+| Endpoint | Status | Content-Type | Body |
+| --- | --- | --- | --- |
+| `POST /api/device/power` | `200` | `application/json` | `""` |
+| `POST /api/device/command` | `200` | `application/json` | `{"successful": true, "result": {…}}` |
+| `PUT /api/settings` | `307` → `/api/settings/` → `200` | `application/json` | `{"successful": true, "result": {…}}` |
+
+`POST /api/device/power` returns a bare JSON empty string rather than a result object, so its success cannot be checked from the body — a 2xx with no usable body is the only signal of success, which is why callers should re-`GET` the device state afterwards (see [Power Control Endpoints](#post-apidevicepower)). The other two writes return a normal result object that can be checked for `successful: true`.
+
+`PUT /api/settings` (no trailing slash) redirects to the trailing-slash path; a client that preserves the method on a 307 sees only the final `200`, at the cost of a second round trip. `GET /api/settings` does **not** redirect.
+
+### Rejections arrive as an error status with a JSON body
+
+| Request | Status | Body |
+| --- | --- | --- |
+| `GET /api/definitely-not-a-real-endpoint` | `404` | `404 page not found` (plain text) |
+| `POST /api/device` (a GET-only endpoint) | `404` | `404 page not found` (plain text) |
+| `POST /api/device/command` with `{}` | `400` | `{"error": {"step": "set_manual_command", "errCode": "Key: 'ManualCommandReq…"}}` |
+
+A malformed or missing endpoint answers with plain text, but a refused command still answers with a JSON body — so a caller must check the HTTP status before parsing the body as a success payload.
+
+### Record timestamps are seconds in some places and milliseconds in others
+
+`createdAt`/`updatedAt` do not carry the same unit everywhere:
+
+| Record | Unit | Example |
+| --- | --- | --- |
+| `GET /api/device`, `GET /api/settings`, `GET /api/device/maintenance/diagnostics` | seconds | `1786919104` |
+| `status.currentMode`, the result of `POST /api/device/command`, notification records | milliseconds | `1786919563000` |
+
+Both refer to the same instant, so the digit count is the only way to tell them apart. `startTime`/`endTime` on a mode record are neither of these — they are `HHMM` integers, so a mode running from 23:32 to 03:32 reads `2332` and `332` (see [Send Device Commands](#send-device-commands)).
+
+### The inverter power rating can be zero
+
+`technical_status.inverterPowerRating` has been observed reading `0` on a unit where `device.inverterVaRating` reads `3600` and matches the model number. The xStorage Home range spans 3.6 kW to 6 kW, so anything converting a percentage-based power parameter (e.g. `SET_CHARGE`'s `power`) to watts should not assume 3600 — prefer `inverterPowerRating` only when it is greater than zero, then fall back to `inverterVaRating`, then to a hardcoded default.
+
+### The status totals are watt-hours
+
+`status.today` and `status.last30daysEnergyFlow` (see [Get Device Status](#get-device-status)) carry no unit in this documentation, and a sample response has every field at zero. A live reading at 20:55 local resolves it:
+
+| Field | Value |
+| --- | --- |
+| `energyFlow.gridValue` | `1337` |
+| `today.gridConsumption` | `13748.699` |
+| `last30daysEnergyFlow.gridConsumption` | `411518.78` |
+
+`today.gridConsumption` cannot be power: 13.7 kW is beyond the 3600 VA inverter, and the instantaneous grid reading at the same moment was 1337 W. As energy it is 13.7 kWh of grid import in a day, an ordinary house. The 30-day figure is 29.9× the daily one — 411.5 kWh over 30 days for the same ~13.7 kWh/day. So both blocks are watt-hours, `today` resetting daily and the 30-day block rolling.
+
+Note that `/api/metrics` is **not** in the same unit, despite reading as if it should be Wh: over the same day its 250 samples averaged 574.75 with a maximum of 3688.8; summing them gives 143.7 kWh against an actual 13.7 kWh day. Those samples are watts (see the [Get Hourly Metrics](#get-hourly-metrics) comment).
+
+### The BMS totals are ampere-hours, not kWh
+
+`bmsTotalCharge` and `bmsTotalDischarge` (from `GET /api/technical/status`) have been observed reading `17005` and `15847` on a 4.2 kWh pack whose records start ~396 days earlier. Read as kWh that is over 4000 full cycles in about 13 months, which the hardware cannot do; read as Wh it is about 4 cycles in 13 months, too few for a battery that cycles daily. At the observed `bmsVoltage` of 98.5 V the pack is roughly 42.6 Ah, so 17005 Ah works out to ~399 cycles, or about 1 a day — plausible for a home battery, and a coulomb counter in Ah is the standard BMS convention. The charge:discharge ratio of ~93% is a plausible coulombic efficiency.
+
+### Values missing from the documented enumerations
+
+Seen live but absent from the documented value sets above, so they reach clients unmapped and should be handled as an "unknown/other" case rather than an error:
+
+| Field | Value seen | Documented values |
+| --- | --- | --- |
+| `energyFlow.gridRole` | `PRODUCER` | `NONE`, `SUPPLYING`, `CONSUMING` |
+| `energyFlow.nonCriticalLoadRole` | `CONSUMER` | as above |
+| `energyFlow.operationMode` | `BASIC` | `CHARGING`, `DISCHARGING`, `IDLE` |
+| `currentMode.recurrence` | `DEFAULT_EVENT` | `DAILY`, `WEEKLY`, `MANUAL_EVENT` |
+| `currentMode.type` | `DEFAULT` | `MANUAL`, `SCHEDULE` |
+
+`currentMode` also returns `null` for `duration`, `startTime`, `endTime` and `parameters` while the device is running its default mode rather than a manual command or schedule.
+
+### Which zero readings are real
+
+`GET /api/technical/status` zeroes some fields when it cannot take a reading rather than omitting them, and it is easy to mistake a suppressed reading for a real one (or the reverse). Read from a healthy unit for comparison: `bmsAvgTemperature` 23.2, `bmsMaxTemperature` 46.1, `bmsMinTemperature` 43.7, `bmsVoltage` 90.4, `bmsTotalCharge` 17142, `bmsTotalDischarge` 15999, `gridFrequency` 49.97.
+
+- **Temperatures read as 0 when absent, not when cold.** The sample response earlier in this document shows `bmsAvgTemperature: 0` next to a max of 35.5 and a min of 32.8 — not a battery at freezing point, an absent reading.
+- **`bmsVoltage` is never legitimately 0.** The pack reads around 90–99 V whenever the BMS answers at all, so `0` means the reading failed rather than nothing being connected.
+- **`bmsTotalCharge`/`bmsTotalDischarge` reading 0 is a read error, not a fresh pack**, once any charge has flowed — these counters only ever climb, and treating a `0` as real would introduce a spurious drop into any running total derived from them.
+- **`gridFrequency` of `0` is a real reading**, not a suppressed one — it is what a grid outage looks like, and it correlates with the `NO_UTILITY` notification (see [Grid / AC Faults](#notification-subtype-reference)). This is the one field where treating zero as "no data" would hide the exact moment it matters most.
+
+### Sign-in error codes are mostly unverified
+
+The documented `errCode` `10` (account locked) is the only signin error confirmed so far; capturing the remaining codes needs deliberately failed logins, which risk a lockout. Because the firmware is frozen (the xStorage Home is discontinued), matching on the English `description` text as a fallback for wrong credentials or an invalid inverter serial is safe from being broken by a future update — the only remaining risk is a device set to a non-English UI language returning a localised `description`.
 
 ---
 
@@ -813,7 +903,7 @@ These endpoints provide basic system information accessible to both customer and
   }
   ```
 
-- **Comment**: Lots of good information.
+- **Comment**: Lots of good information. `today` and `last30daysEnergyFlow` are not documented with a unit, but both are **watt-hours** — `today` resets daily, `last30daysEnergyFlow` rolls over 30 days. This is a different unit to `/api/metrics`, whose samples are instantaneous watts; see [Observed API Behaviour Notes](#observed-api-behaviour-notes) for the reading that pinned this down.
 
 #### Get Device Settings
 
@@ -932,6 +1022,8 @@ These endpoints provide basic system information accessible to both customer and
     - `country`: Extract `geonameId` from country object → string
     - `city`: Extract `geonameId` from city object → string
     - `timezone`: Extract `id` from timezone object → string
+- **Redirect**: The unauthenticated path `PUT /api/settings` (no trailing slash) answers `307` to `PUT /api/settings/`. HTTP clients that preserve the method on a 307 (most do) follow it transparently and only see the final `200`, at the cost of a second round trip. `GET /api/settings` does **not** redirect.
+- **New record every write**: The write does not update the stored document in place — reading settings back afterwards returns identical values with a fresh `id`, `createdAt` and `updatedAt`, so those three fields cannot be used to detect whether a write actually changed anything. Nested records the write did not touch (e.g. `defaultMode`) keep their own original `id`/timestamps.
 - **Tested**: ✅ **Verified working** - Complete workflow tested and confirmed functional.
 - **Request**:
 
@@ -1633,6 +1725,42 @@ Commands control the operational mode of the xStorage Home system. Each command 
 
   _Prevents household consumption from exceeding contracted peak power limits. Automatically discharges battery when consumption threshold is exceeded to avoid utility penalties._
 
+**Response**:
+
+An accepted command answers `200` with the mode record the device stored, in the same shape `status.currentMode` reports — so the caller can read the accepted command back without a second request:
+
+```json
+{
+  "successful": true,
+  "message": "Content Ready",
+  "result": {
+    "id": "0def3bdb-f021-484e-a1d8-22cebaa391a1",
+    "command": "SET_CHARGE",
+    "createdAt": 1786919563000,
+    "updatedAt": 1786919563000,
+    "duration": 4,
+    "startTime": 2332,
+    "endTime": 332,
+    "recurrence": "MANUAL_EVENT",
+    "type": "MANUAL",
+    "parameters": { "action": "ACTION_CHARGE", "power": 100, "soc": 95 },
+    "user": {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "firstName": "Local",
+      "lastName": "User"
+    }
+  }
+}
+```
+
+Everything except `command`, `duration` and `parameters` is filled in by the device:
+
+- `startTime`/`endTime` are `HHMM` integers derived from the time of the request plus its duration, with no date attached — above, 23:32 plus 4 hours gives `332` (03:32 the next day), so the pair can wrap past midnight.
+- `recurrence` is `MANUAL_EVENT` and `type` is `MANUAL` for any command sent to this endpoint.
+- `user` is a placeholder for a locally issued command: an all-zero id and the fixed name `Local User`.
+
+A rejected command (e.g. an empty `{}` body) answers `400` with `{"error": {"step": "set_manual_command", "errCode": "..."}}` instead. See [Observed API Behaviour Notes](#observed-api-behaviour-notes) for the full write-endpoint and error-response comparison.
+
 ---
 
 ### Power Control Endpoints
@@ -1652,7 +1780,7 @@ Commands control the operational mode of the xStorage Home system. Each command 
 
   - **state**: Boolean value to control power state (true = on, false = off).
 
-- **Comment**: When the device is turned off, the "powerState" field in other API responses will return false. Important: the API returns no response body when commanding the inverter on or off (i.e., the HTTP response completes with an empty body). Because the power control request does not return a body, verify the device state after issuing the command using GET /api/device or GET /api/device/status.
+- **Comment**: When the device is turned off, the "powerState" field in other API responses will return false. Important: the API returns no response body when commanding the inverter on or off (i.e., the HTTP response completes with an empty body — a bare JSON empty string `""`, not a result object). Because the power control request does not return a body, verify the device state after issuing the command using GET /api/device or GET /api/device/status. See [Observed API Behaviour Notes](#observed-api-behaviour-notes) for how this compares with the other two write endpoints.
 
 ---
 

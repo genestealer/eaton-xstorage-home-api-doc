@@ -4,6 +4,24 @@ All notable changes to this project are documented here.
 
 This project does not follow a version numbering scheme — entries are grouped by date of change.
 Dates reflect when the work was done, not necessarily when it was committed.
+Ad
+---
+
+## 2026-08-16
+
+### Added
+
+- **"Observed API Behaviour Notes" section**, sourced from live-probing findings in [home_assistant_eaton_battery_storage_improved](https://github.com/genestealer/home_assistant_eaton_battery_storage_improved/blob/develop/docs/device-api-behaviour.md):
+  - Write endpoints (`/api/device/power`, `/api/device/command`, `/api/settings`) answer with three different response shapes; `PUT /api/settings` (no trailing slash) 307-redirects to the trailing-slash path.
+  - Rejected requests: `404` plain text for bad/wrong-method endpoints vs. `400` JSON error body (`{"error": {"step", "errCode"}}`) for a refused command.
+  - `PUT /api/settings` always stores a new record — `id`/`createdAt`/`updatedAt` change on every write even when values are unchanged.
+  - `createdAt`/`updatedAt` are seconds on `GET /api/device`, `GET /api/settings` and diagnostics, but milliseconds on `status.currentMode`, command responses and notifications; `startTime`/`endTime` are `HHMM` integers that can wrap past midnight.
+  - `technical_status.inverterPowerRating` can read `0`; power-percentage-to-watt conversions should fall back to `inverterVaRating` then a hardcoded default.
+  - `status.today` / `status.last30daysEnergyFlow` are watt-hours (undocumented unit), confirmed against a live grid-consumption reading — distinct from `/api/metrics`, which is watts.
+  - `bmsTotalCharge` / `bmsTotalDischarge` are ampere-hours, not kWh, confirmed via pack voltage and expected cycle count.
+  - Documented enum values seen live but missing from the API docs: `gridRole: PRODUCER`, `nonCriticalLoadRole: CONSUMER`, `operationMode: BASIC`, `currentMode.recurrence: DEFAULT_EVENT`, `currentMode.type: DEFAULT`.
+  - Which zero readings in `/api/technical/status` are suppressed placeholders (temperatures, `bmsVoltage`, BMS totals) vs. genuine (`gridFrequency`, which reads `0` during a real outage).
+  - `POST /api/device/command` response example added showing the stored mode record returned on success.
 
 ---
 
